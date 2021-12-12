@@ -1,0 +1,102 @@
+<!-- modal add artist -->
+<div class="modal fade" id="addArtist" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">新增訂閱繪師</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+				</button>
+			</div>
+			<form action="/add_artist" method="post" name="add_artist">
+				<div class="modal-body">
+					body
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">新增</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- end of add artist -->
+
+<!-- modal del artist -->
+<div class="modal fade" id="delArtist" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">取消訂閱繪師</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+				</button>
+			</div>
+			<form action="/del_artist" method="post">
+				<div class="modal-body">
+					body
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">新增</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- end of del artist -->
+
+<!-- modal edit artist info -->
+<div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdrop" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+				<button type="submit" class="btn btn-primary">確定</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- end of modal -->
+
+<!-- modal edit url -->
+<% const subscriber = data.subscribers[0] %>
+<div class="modal fade" id="editInfo" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">資料更改</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+				</button>
+			</div>
+			<form action="/edit_info" method="post">
+				<div class="modal-body">
+					<div class="form-group mb-3">
+						<label for="preview_url" class="col-form-label">預覽網址:</label>
+						<textarea class="form-control" placeholder="可輸入多行，非必填" name="previewURL" id="preview_url" rows="5">
+<%- subscriber.preview_url ?? "" %>
+            </textarea>
+					</div>
+					<div class="form-group mb-3">
+						<label for="download_url" class="col-form-label">下載網址:</label>
+						<textarea class="form-control" placeholder="可輸入多行" name="downloadURL" id="download_url" rows="5" required>
+<%- subscriber.download_url ?? "" %>
+            </textarea>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">確定</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- end of edit url -->

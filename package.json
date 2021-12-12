@@ -1,0 +1,26 @@
+{
+  "name": "subscribe-system-web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "EternalDragonborn",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "dependencies": {
+    "connect-redis": "^6.0.0",
+    "discord.js": "^13.3.1",
+    "dotenv": "^10.0.0",
+    "ejs": "^3.1.6",
+    "ejs-locals": "^1.0.2",
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "luxon": "^2.1.1",
+    "pg": "^8.7.1",
+    "redis": "^4.0.0"
+  },
+  "scripts": {
+    "watch": "nodemon -L src/index.js",
+    "run": "node src/index.js"
+  }
+}

@@ -1,0 +1,4 @@
+.env
+subscribe.dat
+*docker*
+node_modules/
