@@ -1,17 +1,24 @@
-# not implement
+# WIP
+## full-end
+    - [ ] subscriber & artist delete
+    - [ ] subscriber set up
+    - [ ] edit artist info
+    - [ ] upload book info
 ## front-end
-- [ ] subscriber & artist delete
-- [ ] subscriber set up
-- [ ] edit artist info
+- [ ]
 ## back-end
 * subscriber
     - [ ] add
-    - [ ] delete
     - [ ] edit URL
 * artist
+    - [ ] update
     - [ ] add
-    - [ ] delete
-    - [ ] edit info
+- [ ] webhook
 
 # considering implement
 - feedback
+- access deny when more then 40 days no update
+- use AJAX to get table data
+
+# problems
+- session store failed

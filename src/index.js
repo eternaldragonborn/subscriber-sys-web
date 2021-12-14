@@ -4,12 +4,10 @@ const session = require('express-session');
 // const RedisStore = require('connect-redis')(session);
 const engine = require('ejs-locals');
 const { getdata, redis } = require('./modules/db');
-const { Client } = require('discord.js');
+const { bot } = require('./modules/discordbot');
 const mountRouter = require('./modules/router');
 
 const app = express();
-
-const bot = new Client({ intents: [32767] });
 
 app.set('trust proxy', 1)
 app.engine('ejs', engine);
@@ -36,7 +34,7 @@ bot.login(process.env['BOT_TOKEN']);
 
 bot.on('ready', () => {
     console.log('client is login')
-    getdata(bot);
+    getdata();
 });
 
 app.listen(80, () => {

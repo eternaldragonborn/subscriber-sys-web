@@ -9,7 +9,10 @@
 			</div>
 			<form action="/add_artist" method="post" name="add_artist">
 				<div class="modal-body">
-					body
+					<div class="form-floating mb-3">
+						<input type="text" class="form-control" id="artist-name" name="artist" placeholder="繪師名">
+						<label for="artist-name">繪師名</label>
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -67,7 +70,7 @@
 <!-- end of modal -->
 
 <!-- modal edit url -->
-<% const subscriber = data.subscribers[0] %>
+<% const subscriber = data.subscribers %>
 <div class="modal fade" id="editInfo" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content">

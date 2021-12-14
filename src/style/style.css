@@ -17,10 +17,6 @@ body {
   background-size: cover;
 }
 
-textarea {
-  spell-check: "false";
-}
-
 thead {
   border-top: 0px !important;
 }

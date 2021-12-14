@@ -46,20 +46,15 @@
 			<div class="alert alert-primary d-flex align-items-center" role="alert">
 				<div>
 					<i class="fas fa-info-circle fa-lg me-2"></i>
-					訂閱者名皆為Discord實際名稱，而非群組暱稱。
+				</div>
+				<div>
+					<ul>
+						<li>訂閱者名皆為Discord實際名稱，而非群組暱稱。</li>
+						<li>超過五分鐘沒任何動作網頁驗證將失效，請重新取得網址。</li>
+					</ul>
 				</div>
 			</div>
-			<% if( status===2 ) { %>
-			<div>
-				<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubscriber">
-					新增訂閱者
-				</button>
-				<button disabled type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delSubscriber">
-					刪除訂閱者
-				</button>
-			</div>
-			<% include /modals/subscriber_modals %>
-			<% } %>
+
 			<!-- overview table -->
 			<div class="table-responsive scrollable overflow-auto">
 				<% if(status<2) { %>
