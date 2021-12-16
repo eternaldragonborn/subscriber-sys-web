@@ -7,6 +7,7 @@ module.exports = {
     getUserName: async (id) => {
         return (bot.users
             .fetch(id))
-            .then(user => { return user.username; });
+            .then(user => { return user.username; })
+            .catch(() => { return "unknown"; });
     }
 }

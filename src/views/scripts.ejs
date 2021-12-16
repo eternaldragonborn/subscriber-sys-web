@@ -1,0 +1,13 @@
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+$('form').on('submit', event => {
+	event.preventDefault();
+});
+const formSubmit = axios.create({
+	timeout: 5000,
+	timeoutErrorMessage: "連線超時，請稍後再試或進行回報",
+	headers: {
+		"Content-Type": "multipart/form-data"
+	}
+});
+</script>
