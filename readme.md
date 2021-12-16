@@ -1,10 +1,10 @@
 # WIP
 ## full-end
-    - [ ] subscriber delete
-    - [ ] artist unsub
-    - [ ] artist delete
-    - [ ] edit artist info
-    - [ ] upload book info
+- [ ] subscriber delete
+- [ ] artist unsub
+- [ ] artist delete
+- [ ] edit artist info
+- [ ] upload book info
 ## front-end
 - [ ]
 ## back-end
