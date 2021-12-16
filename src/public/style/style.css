@@ -1,0 +1,59 @@
+header {
+  background-color: rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  bottom: 0;
+  margin-bottom: 1rem;
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+html body {
+  height: 100vh;
+}
+
+a {
+  color: #1e78ff;
+}
+
+.alert {
+  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.btn:not(:hover, :disabled), input {
+  -webkit-box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
+          box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+body {
+  background-image: url("https://i.imgur.com/7dj7vwQ.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+thead {
+  border-top: 0px !important;
+}
+
+thead th {
+  border-bottom: 0px !important;
+}
+
+tbody {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.65);
+  border-top: 0px #373b3e !important;
+  border-color: #767c81;
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: rgba(63, 70, 78, 0.5);
+}
+
+tbody tr:hover {
+  background-color: rgba(81, 121, 158, 0.6);
+}
+/*# sourceMappingURL=style.css.map */

@@ -1,15 +1,17 @@
 # WIP
 ## full-end
-    - [ ] subscriber & artist delete
-    - [ ] subscriber set up
-    - [ ] edit artist info
-    - [ ] upload book info
+- [ ] subscriber delete
+- [ ] artist unsub
+- [ ] artist delete
+- [ ] edit artist info
+- [ ] upload book info
 ## front-end
 - [ ]
 ## back-end
 * subscriber
     - [ ] add
-    - [ ] edit URL
+    - [x] edit URL
+    - [x] set up
 * artist
     - [ ] update
     - [ ] add

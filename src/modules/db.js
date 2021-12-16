@@ -33,6 +33,10 @@ function updateStatus(date, status) {
     return new Object({ date: date, status: status });
 }
 
+pool.on('error', (err, client) => {
+    console.log(err);
+})
+
 module.exports = {
     pg: pool,
     redis: client,
@@ -40,19 +44,14 @@ module.exports = {
         const data = new Object();
 
         data['subscribers'] = new Object();
-        (await pool
-            .query('SELECT subscriber as id, preview_url, download_url FROM subscribers'))
-            .rows
-            .forEach(subscriber => {
-                getUserName(subscriber.id.slice(2, -1))
-                    .then(name => {
-                        data.subscribers[subscriber.id] = new Object({
-                            name,
-                            preview_url: subscriber.preview_url,
-                            download_url: subscriber.download_url
-                        });
-                    });
+        for (subscriber of (await pool.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
+            const name = await getUserName(subscriber.id.slice(2, -1))
+            data.subscribers[subscriber.id] = new Object({
+                name,
+                preview_url: subscriber.preview_url,
+                download_url: subscriber.download_url
             });
+        };
 
 
         data['artists'] = (await pool.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
