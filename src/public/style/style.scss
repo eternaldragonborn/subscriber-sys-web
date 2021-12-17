@@ -17,11 +17,11 @@ a {
 }
 
 .alert {
-    box-shadow: 4px 4px 5px rgba($color: black, $alpha: .5) !important;
+    box-shadow: 4px 4px 5px rgba($color: black, $alpha: .4) !important;
 }
 
-.btn:not(:hover, :disabled), input {
-    box-shadow: 2px 2px 4px rgba($color: black, $alpha: .5) !important;
+.btn:not(:hover, :disabled) {
+    box-shadow: 2px 2px 4px rgba($color: black, $alpha: .3) !important;
 }
 
 body {

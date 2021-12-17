@@ -16,6 +16,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('./src/public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(require('multer')().array());
+app.use(require('morgan')('dev'));
 app.use(session({
     //store: new RedisStore({ client: redis }),
     secret: process.env.SESSION_SECRET,

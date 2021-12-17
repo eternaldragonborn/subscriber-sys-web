@@ -8,7 +8,7 @@
 </div>
 <% include ../modals/subscriber_modals %>
 
-<table data-classes="table align-middle table-bordered" data-toolbar=".toolbar" data-toolbar-align="right" data-toggle="table" data-search="true" data-height="700" data-show-search-button="true" data-search-align="left" data-show-search-clear-button="true" data-virtual-scroll="true" data-sort-reset="true" id="overview-table">
+<table data-classes="table align-middle table-bordered" data-toolbar=".toolbar" data-toolbar-align="right" data-toggle="table" data-search="true" data-height="500" data-show-search-button="true" data-search-align="left" data-show-search-clear-button="true" data-virtual-scroll="true" data-sort-reset="true" id="overview-table">
 	<thead class="table-dark">
 		<tr>
 			<th data-field="artist" data-sortable="true">繪師</th>
@@ -36,7 +36,7 @@
 			<td>
 				<% const preview_url=subscriber['preview_url'] %>
 				<% if (preview_url !='無' ) { %>
-				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="預覽" data-bs-artist=<%-artist['artist'] %> data-bs-url="<%- subscriber['preview_url'] %>">
+				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="預覽" data-bs-subscriber="<%- artist.subscriber %>" data-bs-artist="<%- artist.artist %>">
 					<i class="fas fa-search fa-lg" style="color: cornflowerblue;"></i>
 				</a>
 				<% } else { %>
@@ -44,7 +44,7 @@
 				<% } %>
 			</td>
 			<td>
-				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="下載" data-bs-artist=<%-artist['artist'] %> data-bs-url="<%- subscriber['download_url'] %>">
+				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="下載" data-bs-subscriber="<%- artist.subscriber %>" data-bs-artist="<%- artist.artist %>">
 					<i class="fas fa-cloud-download-alt fa-lg" style="color: cornflowerblue;"></i>
 				</a>
 			</td>

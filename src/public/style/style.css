@@ -17,13 +17,13 @@ a {
 }
 
 .alert {
-  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5) !important;
-          box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5) !important;
+  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4) !important;
+          box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4) !important;
 }
 
-.btn:not(:hover, :disabled), input {
-  -webkit-box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
-          box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
+.btn:not(:hover, :disabled) {
+  -webkit-box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+          box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
 
 body {

@@ -35,7 +35,7 @@
 						</button>
 					</div>
 					<div class="modal-body text-break">
-
+						載入中，請稍後再嘗試查看。
 					</div>
 				</div>
 			</div>
@@ -43,6 +43,10 @@
 		<!-- end of modal -->
 
 		<div class="container mt-4">
+			<div class="alert alert-danger" role="alert" style="display: none;">
+				<i class="far fa-times-circle fa-lg text-danger"></i>
+				取得網址失敗，請重新整理或進行回報。
+			</div>
 			<div class="alert alert-primary d-flex align-items-center" role="alert">
 				<div>
 					<i class="fas fa-info-circle fa-lg me-1"></i>
@@ -74,29 +78,40 @@
 	<script src="https://unpkg.com/bootstrap-table@1.19.1/dist/bootstrap-table.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/gh/wenzhixin/bootstrap-table-examples@master/utils/natural-sorting/dist/natural-sorting.js"></script>
 	<% include /scripts %>
+	<% if (status > 0) { %>
 	<script>
-$(document).ready(() => {
-	$(".fixed-table-container").height($(window).height() * 0.65);
-})
+var urls;
+axios.get('/subscriber/get-urls')
+	.then(res => {
+		urls = res.data;
+	})
+	.catch(res => {
+		console.log(res);
+		$('.alert-danger').first().show();
+	});
 
-$(window).on('resize', () => {
-	$(".fixed-table-container").height($(window).height() * 0.65);
-})
-
-var URLmodal = document.getElementById('modal-URL');
-URLmodal.addEventListener('show.bs.modal', (event) => {
-	function replacer(match) {
-		return `<a href="${match}" target="_blank">${match}</a>`
-	}
-	var button = event.relatedTarget;
-	var url = button.getAttribute('data-bs-url');
+const modal = $('#modal-URL');
+modal.on('show.bs.modal', event => {
+	const button = $(event.relatedTarget);
+	const subscriber = button.attr('data-bs-subscriber');
+	const url_type = button.attr('data-bs-type');
+	let url = urls[subscriber][url_type === '預覽' ? 'preview_url' : 'download_url'];
 	url = url.replace(/((https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\-\?=#]*)*\/?)/g, '<a href="$1" target="_blank">$1</a>');
 	url = url.replace(/\n/g, '<br>');
-	var modalTitle = URLmodal.querySelector(".modal-title");
-	var modalBody = URLmodal.querySelector(".modal-body");
 
-	modalTitle.textContent = `${button.getAttribute('data-bs-artist')} ${button.getAttribute('data-bs-type')}`;
-	modalBody.innerHTML = `${url}`;
+	$('.modal-title', modal).text(`${button.attr('data-bs-artist')} ${url_type}`);
+	$('.modal-body', modal).html(url);
+});
+	</script>
+	<% } %>
+
+	<script>
+$(document).ready(() => {
+	$(".fixed-table-container").height($(window).height() * .6);
+
+	$(window).on('resize', () => {
+		$(".fixed-table-container").height($(window).height() * .6);
+	});
 });
 	</script>
 </body>

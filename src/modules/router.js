@@ -32,15 +32,23 @@ public.get('/', async (req, res) => {
     res.render('overview', { user: req.session.user?.id, status: req.session.user?.status ?? 0, data: data });
 });
 
-private.all((req, res, next) => {  // 驗證身分
-    if (!req.session.user || !req.params.id)
+private.use((req, res, next) => {  // 驗證身分
+    if ((req.session.user?.status ?? 0) === 0) {
         res.status(401).send("無效的訪問");
-    else if (req.session.user.id != req.params.id && req.session.user.status != 2)
-        res.status(401).send("非管理員，無權修改他人資料");
-    else next();
+    }
+    else { next(); };
+});
+
+private.get('/get-urls', async (req, res) => {
+    const data = await loaddata();
+    res.send(data.subscribers);
 });
 
 private.get('/:id', async (req, res) => {
+    if (req.session.user?.id != req.params.id && req.session.user?.status != 2) {
+        res.status(401).send("非管理員，無權修改他人資料");
+        return;
+    }
     let data = await loaddata();
     data.subscribers = data.subscribers[`<@${req.params.id}>`];
     data.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
@@ -55,7 +63,7 @@ edit.all((req, res, next) => {
     else if (req.session.user.id != req.body.id && req.session.user.status != 2)
         res.status(403).send("非管理員，無權修改他人資料");
     else next();
-})
+});
 
 edit.post('/url', async (req, res) => {
     const form = req.body;
@@ -77,7 +85,7 @@ edit.post('/set-up', async (req, res) => {
     pg.query(`INSERT INTO subscribers VALUES('<@${form.id}>', '${form.preview_url}', '${form.download_url}');`)
         .then(() => { res.sendStatus(200); })
         .catch((err) => { res.status(500).send(err); })
-})
+});
 
 /**
  *
