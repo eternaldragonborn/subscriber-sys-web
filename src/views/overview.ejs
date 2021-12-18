@@ -86,7 +86,7 @@
 	<% if (status > 0) { %>
 	<script>
 var urls;
-axios.get('/subscriber/get-urls')
+axios.get('/subscriber/get/url')
 	.then(res => {
 		urls = res.data;
 	})

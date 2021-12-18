@@ -9,13 +9,14 @@ const private = Router();
 
 const dbError = (res, err) => {
     console.error(err.detail);
-    res.status(500).send(err.detail);
+    res.status(500).send('ERROR: ' + err.detail);
 }
 
-// http://localhost:4567/valid?token=token
-// http://localhost:4567/valid?token=test
+// http://localhost:4567/validation?token=token
+// http://localhost:4567/validation?token=test
 
-public.get('/valid', async (req, res) => {
+//#region public Router
+public.get('/validation', async (req, res) => {
     const token = req.query['token'];
 
     if (token) {
@@ -37,24 +38,30 @@ public.get('/', async (req, res) => {
     let data = await loaddata();
     res.render('overview', { user: req.session.user?.id, status: req.session.user?.status ?? 0, data: data });
 });
+//#endregion
 
-private.use((req, res, next) => {  // 驗證身分
+//#region private Router
+private.use(async (req, res, next) => {  // 驗證身分
     if ((req.session.user?.status ?? 0) === 0) {
         res.status(401).send("無效的訪問");
     }
-    else { next(); };
+    else {
+        next();
+    };
 });
 
-private.get('/get-urls', async (req, res) => {
-    const data = await loaddata();
-    res.send(data.subscribers);
-});
-
-private.get('/get-artists', async (req, res) => {
-    const id = req.query.id;
+private.get('/get/:type', async (req, res) => {
     let data = await loaddata();
-    data = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
-    res.send(data);
+    switch (req.params.type) {
+        case 'url':
+            res.send(data.subscribers);
+            break;
+        case 'artist':  // not used
+            const id = req.query.id;
+            data = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
+            res.send(data);
+            break;
+    }
 });
 
 private.get('/:id', async (req, res) => {
@@ -67,8 +74,10 @@ private.get('/:id', async (req, res) => {
     data.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
     res.render('subscriber', { id: req.params.id, data });
 });
+//#endregion
 
-edit.use((req, res, next) => {
+//#region edit Router
+edit.use((req, res, next) => {  // validation
     if (!req.session.user)
         res.status(403).send("非訂閱者");
     else if (!Object.keys(req.body).length)
@@ -76,42 +85,45 @@ edit.use((req, res, next) => {
     else if (req.session.user.id != req.body.id && req.session.user.status != 2)
         res.status(403).send("非管理員，無權修改他人資料");
     else {
+        console.log(req.path);
         next();
     }
 });
 
-edit.post('/url', async (req, res, next) => {
-    const form = req.body;
-    pg.query(`UPDATE subscribers SET preview_url='${form.preview_url}', download_url='${form.download_url}' WHERE subscriber='<@${form.id}>';`)
-        .then((result) => {
-            if (!result.rowCount) throw new Error("unknown target");
-        })
-        .then(() => { res.sendStatus(200); next(); })
-        .catch(err => { dbError(res, err); });
-});
+edit.route('/url')
+    .put(async (req, res, next) => {  // set up
+        const form = req.body;
+        if (await getUserName(form.id) === "unknown") {
+            res.status(400).send("無效的訂閱者id");
+            return;
+        }
+        pg.query(`INSERT INTO subscribers VALUES('<@${form.id}>', '${form.preview_url}', '${form.download_url}');`)
+            .then(() => { res.sendStatus(200); next(); })
+            .catch((err) => { dbError(res, err); });
+    })
+    .patch(async (req, res, next) => {  // edit
+        const form = req.body;
+        pg.query(`UPDATE subscribers SET preview_url='${form.preview_url}', download_url='${form.download_url}' WHERE subscriber='<@${form.id}>';`)
+            .then((result) => {
+                if (!result.rowCount) throw new Error("unknown target");
+            })
+            .then(() => { res.sendStatus(200); next(); })
+            .catch(err => { dbError(res, err); });
+    });
 
-edit.post('/set-up', async (req, res, next) => {
-    const form = req.body;
-    if (await getUserName(form.id) === "unknown") {
-        res.status(400).send("無效的訂閱者id");
-        return;
-    }
-    pg.query(`INSERT INTO subscribers VALUES('<@${form.id}>', '${form.preview_url}', '${form.download_url}');`)
-        .then(() => { res.sendStatus(200); next(); })
-        .catch((err) => { dbError(res, err); });
-});
-
-edit.post('/add-artist', async (req, res, next) => {
-    const form = req.body;
-    const time = DateTime.utc().toISODate();
-    pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime") VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time}')`)
-        .then(() => { res.sendStatus(200); next(); })
-        .catch(err => { dbError(res, err); });
-});
+edit.route('/artist')
+    .put(async (req, res, next) => { // add
+        const form = req.body;
+        const time = DateTime.utc().toISODate();
+        pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime") VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time}')`)
+            .then(() => { res.sendStatus(200); next(); })
+            .catch(err => { dbError(res, err); });
+    });
 
 edit.use(() => {  // reload data
     getdata();
 });
+//#endregion
 
 /**
  *

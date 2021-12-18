@@ -90,9 +90,8 @@ let setup_status = false;
 const modal = $('#editInfo');
 
 function set_up() {
-	const form = document.forms['edit-url'];
 	const formData = new FormData(form);
-	formSubmit.post('/edit/set-up', formData)
+	formSubmit.put('/edit/url', formData)
 		.then(res => {
 			const alert = $('.alert-success', form);
 			alert.fadeIn('slow', () => {

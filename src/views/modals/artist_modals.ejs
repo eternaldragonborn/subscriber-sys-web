@@ -7,7 +7,7 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
 				</button>
 			</div>
-			<form action="/edit/add-artist" onsubmit="add_artist();" name="add-artist">
+			<form action="/edit/artist" onsubmit="add_artist();" name="add-artist">
 				<div class="modal-body">
 					<div role="alert" class="alert alert-danger" style="display: none;">
 						<i class="far fa-times-circle fa-lg text-danger"></i>
@@ -36,7 +36,7 @@ function add_artist() {
 	const form = document.forms['add-artist'];
 	const formData = new FormData(form);
 
-	formSubmit.post(form.action, formData)
+	formSubmit.put(form.action, formData)
 		.then(res => {
 			$(form).parents('.modal').modal('hide');
 			alert('新增成功');
@@ -144,7 +144,7 @@ function add_artist() {
 function edit_url() {
 	const form = document.forms['edit-url'];
 	const formData = new FormData(form);
-	formSubmit.post('/edit/url', formData)
+	formSubmit.patch('/edit/url', formData)
 		.then(res => {
 			const alert = $('.alert-success', form);
 			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 3000));
