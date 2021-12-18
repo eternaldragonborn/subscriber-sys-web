@@ -7,10 +7,15 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
 				</button>
 			</div>
-			<form action="/add_artist" method="post" name="add_artist">
+			<form action="/edit/add-artist" onsubmit="add_artist();" name="add-artist">
 				<div class="modal-body">
+					<div role="alert" class="alert alert-danger" style="display: none;">
+						<i class="far fa-times-circle fa-lg text-danger"></i>
+						修改失敗，原因：<span></span>
+					</div>
+					<input type="hidden" name="id" value="<%- id %>">
 					<div class="form-floating mb-3">
-						<input type="text" class="form-control" id="artist-name" name="artist" placeholder="繪師名" required>
+						<input type="text" class="form-control" id="artist-name" name="artist" placeholder="繪師名" required autofocus>
 						<label for="artist-name">繪師名</label>
 					</div>
 					<div class="form-floating mb-3">
@@ -26,6 +31,25 @@
 		</div>
 	</div>
 </div>
+<script>
+function add_artist() {
+	const form = document.forms['add-artist'];
+	const formData = new FormData(form);
+
+	formSubmit.post(form.action, formData)
+		.then(res => {
+			$(form).parents('.modal').modal('hide');
+			alert('新增成功');
+			location.reload(true);
+		})
+		.catch(res => {
+			const alert = $('.alert-danger', form);
+			$('span', alert).text(res.response?.data ?? res.message);
+			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 5000));
+			console.log(res.response.data);
+		});
+}
+</script>
 <!-- end of add artist -->
 
 <!-- modal unsub artist -->
@@ -128,7 +152,7 @@ function edit_url() {
 		.catch(err => {
 			const alert = $('.alert-danger', form);
 			$('span', alert).text(err.response?.data ?? err.message);
-			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 3000));
+			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 5000));
 		});
 }
 </script>

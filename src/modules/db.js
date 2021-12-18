@@ -17,7 +17,7 @@ function updateStatus(date, status) {
     const timeDiff = -(date.diffNow('days').days);
     if (status === 1) {
         date = "---";
-        status = "無紀錄";
+        status = "新訂閱";
     } else {
         if (timeDiff >= 30) {
             status = "未更新";
@@ -30,12 +30,8 @@ function updateStatus(date, status) {
         }
         date = date.toISODate();
     }
-    return new Object({ date: date, status: status });
+    return new Object({ updateDate: date, status: status });
 }
-
-pool.on('error', (err, client) => {
-    console.log(err);
-})
 
 module.exports = {
     pg: pool,
@@ -55,10 +51,10 @@ module.exports = {
 
 
         data['artists'] = (await pool.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
-        data['artists'].forEach(artist => {
-            const lastUpdateTime = DateTime.fromJSDate(artist['lastUpdateTime']);
-            artist['updateInfo'] = updateStatus(lastUpdateTime, artist.status);
-            delete artist.status, delete artist.lastUpdateTime;
+        data['artists'].forEach((artist, index) => {
+            let { status, lastUpdateTime, ...info } = artist;
+            lastUpdateTime = DateTime.fromJSDate(lastUpdateTime);
+            data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
         });
 
         fs.writeFileSync('./src/subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });

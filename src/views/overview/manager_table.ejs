@@ -1,5 +1,5 @@
 <div class="toolbar">
-	<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubscriber">
+	<button disabled type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubscriber">
 		新增訂閱者
 	</button>
 	<button disabled type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delSubscriber">
@@ -26,8 +26,14 @@
 		<tr>
 			<td><%- artist.artist %></td>
 			<td><%- artist.mark %></td>
-			<td><%- artist.updateInfo.date %></td>
-			<td><%- artist.updateInfo.status %></td>
+			<td><%- artist.updateDate %></td>
+			<td>
+				<%- artist.status %>
+				<% if(artist.status === '新訂閱') { %>
+				<!-- experimential -->
+				<span class="badge bg-success">new</span>
+				<% } %>
+			</td>
 			<td>
 				<a href="/subscriber/<%- artist.subscriber.slice(2, -1) %>">
 					<%- subscriber.name %>
@@ -35,7 +41,7 @@
 			</td>
 			<td>
 				<% const preview_url=subscriber['preview_url'] %>
-				<% if (preview_url !='無' ) { %>
+				<% if ( preview_url && preview_url !='無' ) { %>
 				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="預覽" data-bs-subscriber="<%- artist.subscriber %>" data-bs-artist="<%- artist.artist %>">
 					<i class="fas fa-search fa-lg" style="color: cornflowerblue;"></i>
 				</a>

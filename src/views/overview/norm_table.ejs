@@ -16,15 +16,15 @@
 		<tr>
 			<td><%- artist.artist %></td>
 			<td><%- artist.mark %></td>
-			<td><%- artist.updateInfo.date %></td>
-			<td><%- artist.updateInfo.status %></td>
+			<td><%- artist.updateDate %></td>
+			<td><%- artist.status %></td>
 			<td>
 				<%- subscriber.name %>
 			</td>
 			<% if(status > 0) { %>
 			<td class="text-center">
 				<% const preview_url=subscriber['preview_url'] %>
-				<% if (preview_url !='無' ) { %>
+				<% if ( preview_url && preview_url !='無' ) { %>
 				<a data-bs-toggle="modal" data-bs-target="#modal-URL" data-bs-type="預覽" data-bs-subscriber="<%- artist.subscriber %>" data-bs-artist="<%- artist.artist %>">
 					<i class="fas fa-search fa-lg" style="color: cornflowerblue;"></i>
 				</a>

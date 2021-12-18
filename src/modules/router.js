@@ -1,10 +1,16 @@
 const { loaddata, redis, pg, getdata } = require('./db');
 const { Express, Router } = require('express');
 const { getUserName } = require('./discordbot');
+const { DateTime } = require('luxon');
 
 const public = Router();
 const edit = Router();
 const private = Router();
+
+const dbError = (res, err) => {
+    console.error(err.detail);
+    res.status(500).send(err.detail);
+}
 
 // http://localhost:4567/valid?token=token
 // http://localhost:4567/valid?token=test
@@ -44,6 +50,13 @@ private.get('/get-urls', async (req, res) => {
     res.send(data.subscribers);
 });
 
+private.get('/get-artists', async (req, res) => {
+    const id = req.query.id;
+    let data = await loaddata();
+    data = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
+    res.send(data);
+});
+
 private.get('/:id', async (req, res) => {
     if (req.session.user?.id != req.params.id && req.session.user?.status != 2) {
         res.status(401).send("非管理員，無權修改他人資料");
@@ -55,36 +68,49 @@ private.get('/:id', async (req, res) => {
     res.render('subscriber', { id: req.params.id, data });
 });
 
-edit.all((req, res, next) => {
+edit.use((req, res, next) => {
     if (!req.session.user)
         res.status(403).send("非訂閱者");
-    else if (!Object.keys(req.body.length))
+    else if (!Object.keys(req.body).length)
         res.status(400).send("empty form");
     else if (req.session.user.id != req.body.id && req.session.user.status != 2)
         res.status(403).send("非管理員，無權修改他人資料");
-    else next();
+    else {
+        next();
+    }
 });
 
-edit.post('/url', async (req, res) => {
+edit.post('/url', async (req, res, next) => {
     const form = req.body;
     pg.query(`UPDATE subscribers SET preview_url='${form.preview_url}', download_url='${form.download_url}' WHERE subscriber='<@${form.id}>';`)
         .then((result) => {
             if (!result.rowCount) throw new Error("unknown target");
-            getdata();
         })
-        .then(() => res.sendStatus(200))
-        .catch(err => { console.log(err); res.status(500).send(err.message) });
+        .then(() => { res.sendStatus(200); next(); })
+        .catch(err => { dbError(res, err); });
 });
 
-edit.post('/set-up', async (req, res) => {
+edit.post('/set-up', async (req, res, next) => {
     const form = req.body;
     if (await getUserName(form.id) === "unknown") {
         res.status(400).send("無效的訂閱者id");
         return;
     }
     pg.query(`INSERT INTO subscribers VALUES('<@${form.id}>', '${form.preview_url}', '${form.download_url}');`)
-        .then(() => { res.sendStatus(200); })
-        .catch((err) => { res.status(500).send(err); })
+        .then(() => { res.sendStatus(200); next(); })
+        .catch((err) => { dbError(res, err); });
+});
+
+edit.post('/add-artist', async (req, res, next) => {
+    const form = req.body;
+    const time = DateTime.utc().toISODate();
+    pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime") VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time}')`)
+        .then(() => { res.sendStatus(200); next(); })
+        .catch(err => { dbError(res, err); });
+});
+
+edit.use(() => {  // reload data
+    getdata();
 });
 
 /**
