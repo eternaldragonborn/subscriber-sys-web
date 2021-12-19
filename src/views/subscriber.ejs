@@ -38,9 +38,12 @@
 		</div>
 		<!-- end of toolbar -->
 
-		<div class="alert alert-warning" role="alert">
-			<i class="fas fa-exclamation-triangle fa-lg me-2"></i>
-			欄位排序功能會使勾選方塊功能出錯，因此暫不使用。
+		<div class="alert alert-primary d-flex align-items-center" role="alert">
+			<i class="fas fa-info-circle fa-lg me-2"></i>
+			<ul>
+				<li>點選繪師名稱可編輯其資訊。</li>
+				<li>若沒有更改資料請不要按確定/送出，以免造成伺服器負擔。</li>
+			</ul>
 		</div>
 
 		<!-- artists table -->
@@ -59,17 +62,6 @@
 						</tr>
 					</thead>
 					<tbody>
-						<% data.artists.forEach(artist => { %>
-						<tr>
-							<td>
-								<input type="checkbox" name="artist" value=<%- artist.artist %> onclick="">
-							</td>
-							<td><%- artist.artist %></td>
-							<td><%- artist.mark %></td>
-							<td><%- artist.updateDate %></td>
-							<td><%- artist.status %></td>
-						</tr>
-						<% }) %>
 					</tbody>
 				</form>
 			</table>
@@ -135,23 +127,73 @@ window.onload = () => {
 	<% } %>
 
 	<script>
-$(document)
-	.ready(function() {
-		var count = 0;
-		$('#subscription-table tr')
-			.click((event) => {
-				if (event.target.type !== 'checkbox') {
-					$(':checkbox', event.target.parentElement)
-						.trigger('click');
-				}
-			});
+const id = location.href.split('/').pop();
+let artists;
+var count = 0;
 
-		$('[name = "artist"]')
-			.change((event) => {
-				count += event.currentTarget.checked ? 1 : -1;
-				$('#artist-update')
-					.attr('disabled', count === 0);
+function resetEvent() {
+	count = 0;
+	$('#subscription-table tr')
+		.click((event) => {
+			if (event.target.type !== 'checkbox') {
+				$(':checkbox', event.target.parentElement)
+					.trigger('click');
+			}
+		});
+
+	$('[name = "artist-name"]')
+		.change((event) => {
+			count += event.currentTarget.checked ? 1 : -1;
+			$('#artist-update')
+				.attr('disabled', count === 0);
+		});
+}
+
+function loadTable() {
+	$('#subscription-table tbody').html('<tr><td colspan="5"><div class="spinner-border text-primary" role="status">載入資料中...</div></td></tr>');
+	axios
+		.get('./get/artist', {
+			params: {
+				id
+			}
+		}).then(res => {
+			artists = res.data;
+			$('#subscription-table tbody').html('');
+			$.each(artists, (index, artist) => {
+				$('#subscription-table tbody').append(
+					`<tr>
+						<td class="text-center"><input type="checkbox" name="artist-name" value="${artist.artist}"></td>
+						<td>
+							<a href="" data-bs-toggle="modal" data-bs-target="#edit-artist" data-bs-index="${index}">
+							${artist.artist}
+							</a>
+						</td>
+						<td>${artist.mark}</td>
+						<td>${artist.updateDate}</td>
+						<td>${artist.status}</td>
+					</tr>`
+				);
 			});
+			resetEvent();
+		})
+		.catch(res => console.log(res.data ?? res.message));
+}
+
+const modalEditArtist = $('#edit-artist');
+modalEditArtist.on('show.bs.modal', event => {
+	const button = $(event.relatedTarget);
+	const {
+		artist,
+		mark
+	} = artists[button.attr('data-bs-index')];
+	$('#target-artist, #artist-name', modalEditArtist).attr('value', artist);
+	$('#mark', modalEditArtist).attr('value', mark);
+});
+
+loadTable();
+$(document)
+	.ready(() => {
+		resetEvent();
 	});
 	</script>
 </body>

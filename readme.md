@@ -4,13 +4,13 @@
 - [ ] artist update
 - [ ] artist unsub
 - [ ] artist delete
-- [ ] edit artist info
+- [x] edit artist info
 - [ ] upload book info
 ## front-end
 - [ ] error page
 ## back-end
 * subscriber
-    - [ ] add
+    - ~~[ ] add~~
     - [x] edit URL
     - [x] set up
     - [ ] check if set up target has subscriber role
@@ -19,7 +19,8 @@
 - [ ] webhook
 
 # considering implement
-- feedback
+- log page
+- feedback page
 - access deny when more then 40 days no update
 - use AJAX to get table data
 - register / login

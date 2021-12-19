@@ -85,7 +85,6 @@ edit.use((req, res, next) => {  // validation
     else if (req.session.user.id != req.body.id && req.session.user.status != 2)
         res.status(403).send("非管理員，無權修改他人資料");
     else {
-        console.log(req.path);
         next();
     }
 });
@@ -116,6 +115,12 @@ edit.route('/artist')
         const form = req.body;
         const time = DateTime.utc().toISODate();
         pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime") VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time}')`)
+            .then(() => { res.sendStatus(200); next(); })
+            .catch(err => { dbError(res, err); });
+    })
+    .patch(async (req, res, next) => { // edit
+        const form = req.body;
+        pg.query(`UPDATE artists SET artist='${form.artist}', mark='${form.mark}' WHERE artist='${form.name}'`)
             .then(() => { res.sendStatus(200); next(); })
             .catch(err => { dbError(res, err); });
     });

@@ -13,7 +13,7 @@
 						<i class="far fa-times-circle fa-lg text-danger"></i>
 						修改失敗，原因：<span></span>
 					</div>
-					<input type="hidden" name="id" value="<%- id %>">
+					<input type="hidden" name="id" value="<%- id %>" readonly>
 					<div class="form-floating mb-3">
 						<input type="text" class="form-control" id="artist-name" name="artist" placeholder="繪師名" required autofocus>
 						<label for="artist-name">繪師名</label>
@@ -25,7 +25,10 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-					<button type="submit" class="btn btn-primary">新增</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+						新增
+					</button>
 				</div>
 			</form>
 		</div>
@@ -34,20 +37,20 @@
 <script>
 function add_artist() {
 	const form = document.forms['add-artist'];
-	const formData = new FormData(form);
 
-	formSubmit.put(form.action, formData)
+	formSubmit(form, 'PUT')
 		.then(res => {
 			$(form).parents('.modal').modal('hide');
+			loadTable();
+			form.reset();
 			alert('新增成功');
-			location.reload(true);
 		})
 		.catch(res => {
 			const alert = $('.alert-danger', form);
 			$('span', alert).text(res.response?.data ?? res.message);
 			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 5000));
-			console.log(res.response.data);
-		});
+		})
+		.then(() => formReopen(form));
 }
 </script>
 <!-- end of add artist -->
@@ -76,28 +79,56 @@ function add_artist() {
 <!-- end of unsub artist -->
 
 <!-- modal remove artist -->
-
 <!-- end of modal -->
 
 <!-- modal edit artist info -->
-<div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdrop" aria-hidden="true">
-	<div class="modal-dialog">
+<div class="modal fade" id="edit-artist" role="dialog" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title" id="staticBackdropLabel">繪師資訊更改</h5>
-				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+				<h5 class="modal-title">繪師資訊更改</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
 				</button>
 			</div>
-			<div class="modal-body">
-
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-				<button type="submit" class="btn btn-primary">確定</button>
-			</div>
+			<form name="form-edit-artist" action="/edit/artist" onsubmit="editArtistInfo();">
+				<div class="modal-body">
+					<input type="text" id="target-artist" name="name" hidden readonly>
+					<div class="form-group mb-3">
+						<label for="artist-name">繪師:</label>
+						<input class="form-control" type="text" id="artist-name" name="artist" placeholder="繪師名">
+					</div>
+					<div class="form-group mb-3">
+						<label for="mark">備註:</label>
+						<input class="form-control" type="text" id="mark" name="mark" placeholder="備註，非必填">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+						確定
+					</button>
+				</div>
+			</form>
 		</div>
 	</div>
 </div>
+<script>
+function editArtistInfo() {
+	const form = document.forms['form-edit-artist'];
+
+	formSubmit(form, 'PATCH')
+		.then(res => {
+			$(form).parents('.modal').modal('hide');
+			alert('修改成功');
+			loadTable();
+		})
+		.catch(res => {
+			console.log(res.response?.data ?? res.mesage);
+		})
+		.then(() => formReopen(form));
+}
+</script>
 <!-- end of modal -->
 
 <!-- modal edit url -->
@@ -110,7 +141,7 @@ function add_artist() {
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
 				</button>
 			</div>
-			<form onsubmit="edit_url();" name="edit-url">
+			<form onsubmit="edit_url();" action="/edit/url" name="edit-url">
 				<div class="modal-body">
 					<div role="alert" class="alert alert-success" style="display: none;">
 						<i class="far fa-check-circle fa-lg"></i>
@@ -120,7 +151,7 @@ function add_artist() {
 						<i class="far fa-times-circle fa-lg text-danger"></i>
 						修改失敗，原因：<span></span>
 					</div>
-					<input type="text" class="form-control" name="id" value=<%- id %> hidden>
+					<input type="text" name="id" value="<%- id %>" hidden readonly>
 					<div class="form-group mb-3">
 						<label for="preview_url" class="col-form-label">預覽網址:</label>
 						<textarea class="form-control" placeholder="可輸入多行，非必填" name="preview_url" id="preview_url" rows="5">
@@ -134,7 +165,9 @@ function add_artist() {
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-					<button type="submit" class="btn btn-primary">確定</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>確定
+					</button>
 				</div>
 			</form>
 		</div>
@@ -143,17 +176,18 @@ function add_artist() {
 <script>
 function edit_url() {
 	const form = document.forms['edit-url'];
-	const formData = new FormData(form);
-	formSubmit.patch('/edit/url', formData)
+
+	formSubmit(form, 'PATCH')
 		.then(res => {
 			const alert = $('.alert-success', form);
 			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 3000));
 		})
 		.catch(err => {
 			const alert = $('.alert-danger', form);
-			$('span', alert).text(err.response?.data ?? err.message);
+			$('span', alert).text(err.response?.data);
 			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 5000));
-		});
+		})
+		.then(() => formReopen(form));
 }
 </script>
 <!-- end of edit url -->

@@ -1,13 +1,42 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
+const formDisable = (form) => {
+	const modal = $(form).parents('.modal');
+	$('input, button', modal).attr('disabled', true);
+	$('.spinner-border', modal).attr('hidden', false);
+	modal.attr({
+		"data-bs-backdrop": "static",
+		"data-bs-keyboard": "false"
+	});
+}
+
+const formReopen = (form) => {
+	const modal = $(form).parents('.modal');
+	$('input, button', modal).attr('disabled', false);
+	$('.spinner-border', modal).attr('hidden', true);
+	modal.attr({
+		"data-bs-backdrop": "true",
+		"data-bs-keyboard": "true"
+	});
+}
+
 $('form').on('submit', event => {
 	event.preventDefault();
 });
-const formSubmit = axios.create({
-	timeout: 5000,
-	timeoutErrorMessage: "連線超時，請稍後再試或進行回報",
-	headers: {
-		"Content-Type": "multipart/form-data"
-	}
-});
+
+const formSubmit = (form, method) => {
+	const data = new FormData(form);
+
+	formDisable(form);
+	return axios.request({
+		url: form.action,
+		method,
+		data,
+		timeout: 5000,
+		timeoutErrorMessage: "連線超時，請稍後再試或進行回報",
+		headers: {
+			"Content-Type": "multipart/form-data"
+		}
+	});
+}
 </script>
