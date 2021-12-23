@@ -8,12 +8,13 @@ const edit = Router();
 const private = Router();
 
 const dbError = (res, err) => {
-    console.error(err.detail);
-    res.status(500).send('ERROR: ' + err.detail);
+    const message = err.detail ?? err.message;
+    console.error(message);
+    res.status(500).send('ERROR: ' + message);
 }
 
-// http://localhost:4567/validation?token=token
-// http://localhost:4567/validation?token=test
+// http://localhost:8000/validation?token=token
+// http://localhost:8000/validation?token=test
 
 //#region public Router
 public.get('/validation', async (req, res) => {
@@ -61,6 +62,8 @@ private.get('/get/:type', async (req, res) => {
             data = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
             res.send(data);
             break;
+        default:
+            res.status(404).send('unknown data type');
     }
 });
 
@@ -105,8 +108,8 @@ edit.route('/url')
         pg.query(`UPDATE subscribers SET preview_url='${form.preview_url}', download_url='${form.download_url}' WHERE subscriber='<@${form.id}>';`)
             .then((result) => {
                 if (!result.rowCount) throw new Error("unknown target");
+                res.sendStatus(200); next();
             })
-            .then(() => { res.sendStatus(200); next(); })
             .catch(err => { dbError(res, err); });
     });
 
@@ -121,8 +124,40 @@ edit.route('/artist')
     .patch(async (req, res, next) => { // edit
         const form = req.body;
         pg.query(`UPDATE artists SET artist='${form.artist}', mark='${form.mark}' WHERE artist='${form.name}'`)
-            .then(() => { res.sendStatus(200); next(); })
+            .then((result) => {
+                if (!result.rowCount) throw new Error("unknown target");
+                res.sendStatus(200); next();
+            })
             .catch(err => { dbError(res, err); });
+    })
+    .notify(async (req, res, next) => { // update
+        const form = req.body;
+        const artists = form.artists;
+        let query = 'UPDATE artists SET ';
+        let data;
+        if (form.status === '3') {
+            query += 'status = $1 WHERE artist = ANY($2::text[])';
+            data = [form.status];
+        } else {
+            query += '(status, "lastUpdateTime") = ($1, $2) WHERE artist = ANY($3::text[])';
+            data = [form.status, DateTime.utc().toISODate()];
+        }
+        data.push(artists);
+
+        const client = await pg.connect();
+        try {
+            await client.query('BEGIN');
+            const result = await client.query(query, data);
+            if (result.rowCount != artists.length) throw new Error('UPDATE列數與繪師數不符');
+            await client.query('COMMIT');
+            res.sendStatus(200);
+            next();
+        } catch (err) {
+            await client.query('ROLLBACK');
+            dbError(res, err);
+        } finally {
+            client.release();
+        }
     });
 
 edit.use(() => {  // reload data

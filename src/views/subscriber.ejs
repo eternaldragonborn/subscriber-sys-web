@@ -29,9 +29,6 @@
 			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addArtist">
 				新增繪師
 			</button>
-			<button disabled type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#unsub">
-				取消訂閱
-			</button>
 			<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editInfo">
 				修改資料
 			</button>
@@ -49,21 +46,19 @@
 		<!-- artists table -->
 		<div class="table-responsive mt-3">
 			<table data-classes="table align-middle table-bordered" data-toggle="table" data-sort-reset="true" data-toolbar="#toolbar" id="subscription-table">
-				<form name="artist-update">
-					<thead class="table-dark">
-						<tr>
-							<th data-width="50" class="text-center" data-field="checkbox">
-								<button type="submit" class="btn btn-sm btn-primary" id="artist-update" disabled>更新</button>
-							</th>
-							<th data-field="artist" data-sortable="false">繪師</th>
-							<th data-field="mark">備註</th>
-							<th data-field="lastUpdateTime">上次更新</th>
-							<th data-field="status" data-sortable="false">更新狀態</th>
-						</tr>
-					</thead>
-					<tbody>
-					</tbody>
-				</form>
+				<thead class="table-dark">
+					<tr>
+						<th data-width="50" class="text-center" data-field="checkbox">
+							<button data-bs-toggle="modal" data-bs-target="#updateArtist" id="artist-update-btn" class="btn btn-sm btn-primary" disabled>更新</button>
+						</th>
+						<th data-field="artist" data-sortable="false">繪師</th>
+						<th data-field="mark">備註</th>
+						<th data-field="lastUpdateTime">上次更新</th>
+						<th data-field="status" data-sortable="false">更新狀態</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 		<!-- end of table -->
@@ -135,16 +130,16 @@ function resetEvent() {
 	count = 0;
 	$('#subscription-table tr')
 		.click((event) => {
-			if (event.target.type !== 'checkbox') {
-				$(':checkbox', event.target.parentElement)
+			if (event.target.type !== 'checkbox' && $(event.target).prop('tagName') !== 'A') {
+				$(':checkbox', event.currentTarget)
 					.trigger('click');
 			}
 		});
 
-	$('[name = "artist-name"]')
+	$('.artist-checkbox')
 		.change((event) => {
-			count += event.currentTarget.checked ? 1 : -1;
-			$('#artist-update')
+			count += event.target.checked ? 1 : -1;
+			$('#artist-update-btn')
 				.attr('disabled', count === 0);
 		});
 }
@@ -162,9 +157,9 @@ function loadTable() {
 			$.each(artists, (index, artist) => {
 				$('#subscription-table tbody').append(
 					`<tr>
-						<td class="text-center"><input type="checkbox" name="artist-name" value="${artist.artist}"></td>
+						<td class="text-center"><input type="checkbox" class="form-check-input artist-checkbox" value="${artist.artist}"></td>
 						<td>
-							<a href="" data-bs-toggle="modal" data-bs-target="#edit-artist" data-bs-index="${index}">
+							<a href="" data-bs-toggle="modal" data-bs-target="#editArtist" data-bs-index="${index}">
 							${artist.artist}
 							</a>
 						</td>
@@ -179,15 +174,30 @@ function loadTable() {
 		.catch(res => console.log(res.data ?? res.message));
 }
 
-const modalEditArtist = $('#edit-artist');
-modalEditArtist.on('show.bs.modal', event => {
+$('#updateArtist').on('show.bs.modal', event => {
+	const modal = $(event.target);
+	const button = $(event.relatedTarget);
+	$('#update-target', modal).html('');
+	$(':checkbox:checked').each((index, element) => {
+		const artist = $(element).attr('value');
+		$('#update-target', modal).append(`
+			<div class="col-4 mb-1">
+				<input type="checkbox" class="form-check-input me-1" name="artists[]" id="${artist}" value="${artist}" checked>
+				<label class="form-check-label" for="${artist}">${artist}</input>
+			</div>
+		`);
+	});
+});
+
+$('#editArtist').on('show.bs.modal', event => {
+	const modal = $(event.target);
 	const button = $(event.relatedTarget);
 	const {
 		artist,
 		mark
 	} = artists[button.attr('data-bs-index')];
-	$('#target-artist, #artist-name', modalEditArtist).attr('value', artist);
-	$('#mark', modalEditArtist).attr('value', mark);
+	$('#target-artist, #artist-name', modal).attr('value', artist);
+	$('#mark', modal).attr('value', mark);
 });
 
 loadTable();

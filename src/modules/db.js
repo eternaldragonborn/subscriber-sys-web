@@ -15,9 +15,12 @@ client.connect();
 
 function updateStatus(date, status) {
     const timeDiff = -(date.diffNow('days').days);
+    date = date.toISODate();
     if (status === 1) {
         date = "---";
         status = "新訂閱";
+    } else if (status === 3) {
+        status = "已退訂";
     } else {
         if (timeDiff >= 30) {
             status = "未更新";
@@ -28,7 +31,6 @@ function updateStatus(date, status) {
                 status = "本月無更新";
             }
         }
-        date = date.toISODate();
     }
     return new Object({ updateDate: date, status: status });
 }

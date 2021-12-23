@@ -1,8 +1,8 @@
 # WIP
 ## full-end
 - [ ] subscriber delete
-- [ ] artist update
-- [ ] artist unsub
+- [x] artist update
+- [x] artist unsub
 - [ ] artist delete
 - [x] edit artist info
 - [ ] upload book info
@@ -25,6 +25,7 @@
 - use AJAX to get table data
 - register / login
 - Tailwind
+- next.js
 
 # problems
 - session store failed

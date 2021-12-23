@@ -55,34 +55,11 @@ function add_artist() {
 </script>
 <!-- end of add artist -->
 
-<!-- modal unsub artist -->
-<div class="modal fade" id="unsub" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title">取消訂閱繪師</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-				</button>
-			</div>
-			<form action="/del_artist" method="post" name="unsub">
-				<div class="modal-body">
-					body
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-					<button type="submit" class="btn btn-primary">新增</button>
-				</div>
-			</form>
-		</div>
-	</div>
-</div>
-<!-- end of unsub artist -->
-
 <!-- modal remove artist -->
 <!-- end of modal -->
 
 <!-- modal edit artist info -->
-<div class="modal fade" id="edit-artist" role="dialog" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editArtist" role="dialog" tabindex="-1" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -95,7 +72,7 @@ function add_artist() {
 					<input type="text" id="target-artist" name="name" hidden readonly>
 					<div class="form-group mb-3">
 						<label for="artist-name">繪師:</label>
-						<input class="form-control" type="text" id="artist-name" name="artist" placeholder="繪師名">
+						<input class="form-control" type="text" id="artist-name" name="artist" placeholder="繪師名" required>
 					</div>
 					<div class="form-group mb-3">
 						<label for="mark">備註:</label>
@@ -130,6 +107,66 @@ function editArtistInfo() {
 }
 </script>
 <!-- end of modal -->
+
+<!-- modal update artist -->
+<div class="modal fade" id="updateArtist" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">繪師更新</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+				</button>
+			</div>
+			<form action="/edit/artist" name="artist-update" onsubmit="update();">
+				<div class="modal-body">
+					繪師：
+					<div class="form-group mb-3 row" id="update-target"></div>
+					狀態：
+					<div class="form-group mb-3">
+						<select class="form-select" name="status" required>
+							<option selected disabled>--- 請選擇 ---</option>
+							<option value="0">更新</option>
+							<option value="2">本月無更新</option>
+							<option value="3">取消訂閱</option>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+						確定
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script>
+function update() {
+	const form = document.forms['artist-update'];
+	if (!$(':checkbox:checked').length) {
+		alert('請選擇繪師。');
+		return;
+	} else if ($('option:selected', form).attr('value') === undefined) {
+		alert('請選擇動作。');
+		return;
+	}
+
+	formSubmit(form, 'NOTIFY')
+		.then(res => {
+			alert('success');
+			$(':checkbox').each((index, element) => $(element).attr('checked', false));
+			loadTable();
+		})
+		.catch(res => {
+			alert(`failed, ${res.response?.data ?? res.message}`)
+		})
+		.then(() => formReopen(form));
+}
+</script>
+<!-- end of update -->
+
 
 <!-- modal edit url -->
 <% const subscriber = data.subscribers %>
