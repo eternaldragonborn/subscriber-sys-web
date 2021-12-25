@@ -1,11 +1,14 @@
 const { loaddata, redis, pg, getdata } = require('./db');
+const { MessageEmbed } = require('discord.js');
 const { Express, Router } = require('express');
-const { getUserName } = require('./discordbot');
-const { DateTime } = require('luxon');
+const { notify } = require('./discordbot');
+const { getTime } = require('./env');
 
 const public = Router();
 const edit = Router();
 const private = Router();
+
+var data;
 
 const dbError = (res, err) => {
     const message = err.detail ?? err.message;
@@ -27,7 +30,6 @@ public.get('/validation', async (req, res) => {
                 id: data.id,    // DC id
                 status: data.status // 0: 非訂閱者, 1: 訂閱者, 2: 管理員
             }
-            // console.log(data.status);
         }
         res.redirect('/');
     } else {
@@ -36,8 +38,7 @@ public.get('/validation', async (req, res) => {
 });
 
 public.get('/', async (req, res) => {
-    let data = await loaddata();
-    res.render('overview', { user: req.session.user?.id, status: req.session.user?.status ?? 0, data: data });
+    res.render('overview', { user: req.session.user?.id, status: req.session.user?.status ?? 0, data });
 });
 //#endregion
 
@@ -52,15 +53,14 @@ private.use(async (req, res, next) => {  // 驗證身分
 });
 
 private.get('/get/:type', async (req, res) => {
-    let data = await loaddata();
     switch (req.params.type) {
         case 'url':
             res.send(data.subscribers);
             break;
         case 'artist':  // not used
             const id = req.query.id;
-            data = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
-            res.send(data);
+            artists = data.artists.filter(artist => { return artist.subscriber === `<@${id}>`; });
+            res.send(artists);
             break;
         default:
             res.status(404).send('unknown data type');
@@ -72,10 +72,10 @@ private.get('/:id', async (req, res) => {
         res.status(401).send("非管理員，無權修改他人資料");
         return;
     }
-    let data = await loaddata();
-    data.subscribers = data.subscribers[`<@${req.params.id}>`];
-    data.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
-    res.render('subscriber', { id: req.params.id, data });
+    const info = new Object();
+    info.subscribers = data.subscribers[`<@${req.params.id}>`];
+    info.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
+    res.render('subscriber', { id: req.params.id, data: info });
 });
 //#endregion
 
@@ -116,9 +116,20 @@ edit.route('/url')
 edit.route('/artist')
     .put(async (req, res, next) => { // add
         const form = req.body;
-        const time = DateTime.utc().toISODate();
-        pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime") VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time}')`)
-            .then(() => { res.sendStatus(200); next(); })
+        const time = getTime();
+        pg.query(`INSERT INTO artists(subscriber, artist, mark, "lastUpdateTime")
+                VALUES('<@${form.id}>', '${form.artist}', '${form.mark}', '${time.toISODate()}')`)
+            .then(() => {
+                res.sendStatus(200);
+                const embed = new MessageEmbed()
+                    .setTitle('新訂閱繪師')
+                    .setTimestamp(time.toJSDate())
+                    .setColor('AQUA')
+                    .addField('繪師', `\`${form.artist}\``, true);
+                if (form.mark) embed.addField('備註', form.mark, true);
+                notify(form.id, { embeds: [embed] });
+                next();
+            })
             .catch(err => { dbError(res, err); });
     })
     .patch(async (req, res, next) => { // edit
@@ -126,31 +137,63 @@ edit.route('/artist')
         pg.query(`UPDATE artists SET artist='${form.artist}', mark='${form.mark}' WHERE artist='${form.name}'`)
             .then((result) => {
                 if (!result.rowCount) throw new Error("unknown target");
-                res.sendStatus(200); next();
+                res.sendStatus(200);
+                // const embed = new MessageEmbed()
+                //     .setTitle('繪師資料更動')
+                //     .setColor('DARK_GREEN')
+                //     .setFooter('詳細請至網頁查看');
+                // if (form.artist != form.name) embed.addField('繪師更名', `\`${form.artist}\` -> \`${form.name}\``);
+                // else embed.addField('繪師', `\`${form.artist}\``);
+                // notify(data.artists[form.artist].subscriber, { embeds: [embed] });
+                next();
             })
             .catch(err => { dbError(res, err); });
     })
     .notify(async (req, res, next) => { // update
         const form = req.body;
-        const artists = form.artists;
+        // const artists = form.artists;
+        const time = getTime();
         let query = 'UPDATE artists SET ';
-        let data;
+        let values;
         if (form.status === '3') {
             query += 'status = $1 WHERE artist = ANY($2::text[])';
-            data = [form.status];
+            values = [form.status];
         } else {
             query += '(status, "lastUpdateTime") = ($1, $2) WHERE artist = ANY($3::text[])';
-            data = [form.status, DateTime.utc().toISODate()];
+            values = [form.status, time.toISODate()];
         }
-        data.push(artists);
+        values.push(form.artists);
 
         const client = await pg.connect();
         try {
             await client.query('BEGIN');
-            const result = await client.query(query, data);
-            if (result.rowCount != artists.length) throw new Error('UPDATE列數與繪師數不符');
+            const result = await client.query(query, values);
+            if (result.rowCount != form.artists.length) throw new Error('資料庫更新發生未知錯誤');
             await client.query('COMMIT');
             res.sendStatus(200);
+            const subscriber = data.artists.find(v => { return form.artists.includes(v.artist); }).subscriber;
+            const embed = new MessageEmbed()
+                .addField('繪師', form.artists.map(v => `\`${v}\``).join('\n'), true)
+                .setTimestamp(time.toJSDate());
+            if (form.mark) embed.addField('備註/原因', form.mark, true);
+            switch (form.status) {
+                case '0': // 更新
+                    embed.setTitle('繪師更新')
+                        .setColor('GREEN');
+                    if (data.subscribers[subscriber].preview_url)
+                        embed.addField('預覽', data.subscribers[subscriber].preview_url, false);
+                    embed.addField('下載', data.subscribers[subscriber].download_url, false);
+                    break;
+                case '2': // 停更
+                    embed.setTitle('繪師停更')
+                        .setColor('DARK_GREY');
+                    break;
+                case '3': // unsub
+                    embed.setTitle('取消訂閱')
+                        .setColor('DARK_RED');
+                    break;
+            }
+            notify(subscriber, { embeds: [embed] });
             next();
         } catch (err) {
             await client.query('ROLLBACK');
@@ -160,8 +203,9 @@ edit.route('/artist')
         }
     });
 
-edit.use(() => {  // reload data
-    getdata();
+edit.use(async () => {  // reload data
+    await getdata();
+    data = await loaddata();
 });
 //#endregion
 
@@ -169,7 +213,8 @@ edit.use(() => {  // reload data
  *
  * @param {Express} app
  */
-module.exports = app => {
+module.exports = async app => {
+    data = await loaddata();
     app.use('/', public);
     app.use('/subscriber', private);
     app.use('/edit', edit);

@@ -121,14 +121,18 @@ function editArtistInfo() {
 				<div class="modal-body">
 					繪師：
 					<div class="form-group mb-3 row" id="update-target"></div>
-					狀態：
 					<div class="form-group mb-3">
-						<select class="form-select" name="status" required>
+						<label for="update-status">狀態：</label>
+						<select class="form-select" id="update-status" name="status" required>
 							<option selected disabled>--- 請選擇 ---</option>
 							<option value="0">更新</option>
 							<option value="2">本月無更新</option>
 							<option value="3">取消訂閱</option>
 						</select>
+					</div>
+					<div class="form-group mb-3">
+						<label for="update-mark">備註：</label>
+						<input class="form-control" id="update-mark" name="mark" type="text" placeholder="更新備註/退訂說明，非必填">
 					</div>
 				</div>
 				<div class="modal-footer">
@@ -156,6 +160,7 @@ function update() {
 	formSubmit(form, 'NOTIFY')
 		.then(res => {
 			alert('success');
+			form.reset();
 			$(':checkbox').each((index, element) => $(element).attr('checked', false));
 			loadTable();
 		})

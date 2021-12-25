@@ -1,16 +1,19 @@
 const { Pool } = require('pg');
 const fs = require('fs');
 const { DateTime } = require('luxon');
-const { getUserName } = require('./discordbot');
+const { getUser } = require('./discordbot');
 const pool = new Pool({
-    host: 'db',
+    host: process.env['SQL_HOST'],
     user: process.env['SQL_USER'],
     password: process.env['SQL_PASSWD'],
-    database: process.env['SQL_DB']
+    database: process.env['SQL_DB'],
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 const redis = require('redis');
-const client = redis.createClient({ url: 'redis://myredis' });
+const client = redis.createClient({ url: 'redis://' + process.env['REDIS_HOST'], password: process.env['REDIS_PASSWD'] });
 client.connect();
 
 function updateStatus(date, status) {
@@ -35,33 +38,38 @@ function updateStatus(date, status) {
     return new Object({ updateDate: date, status: status });
 }
 
+const getdata = async () => {
+    const data = new Object();
+
+    data['subscribers'] = new Object();
+    for (subscriber of (await pool.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
+        const name = (await getUser(subscriber.id.slice(2, -1))).username;
+        data.subscribers[subscriber.id] = new Object({
+            name,
+            preview_url: subscriber.preview_url,
+            download_url: subscriber.download_url
+        });
+    };
+
+
+    data['artists'] = (await pool.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
+    data['artists'].forEach((artist, index) => {
+        let { status, lastUpdateTime, ...info } = artist;
+        lastUpdateTime = DateTime.fromJSDate(lastUpdateTime);
+        data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
+    });
+
+    fs.writeFileSync('./subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });
+}
+
+const loaddata = async () => {
+    if (!fs.existsSync('./subscribe.dat')) await getdata();
+    return JSON.parse(fs.readFileSync('./subscribe.dat', { encoding: 'utf-8' }));
+}
+
 module.exports = {
     pg: pool,
     redis: client,
-    getdata: async () => {
-        const data = new Object();
-
-        data['subscribers'] = new Object();
-        for (subscriber of (await pool.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
-            const name = await getUserName(subscriber.id.slice(2, -1))
-            data.subscribers[subscriber.id] = new Object({
-                name,
-                preview_url: subscriber.preview_url,
-                download_url: subscriber.download_url
-            });
-        };
-
-
-        data['artists'] = (await pool.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
-        data['artists'].forEach((artist, index) => {
-            let { status, lastUpdateTime, ...info } = artist;
-            lastUpdateTime = DateTime.fromJSDate(lastUpdateTime);
-            data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
-        });
-
-        fs.writeFileSync('./src/subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });
-    },
-    loaddata: async () => {
-        return JSON.parse(fs.readFileSync('./src/subscribe.dat', { encoding: 'utf-8' }));
-    }
+    getdata,
+    loaddata
 }

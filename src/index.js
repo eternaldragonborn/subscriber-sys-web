@@ -6,6 +6,13 @@ const { getdata, redis } = require('./modules/db');
 const { bot } = require('./modules/discordbot');
 const bodyParser = require('body-parser');
 
+bot.login(process.env['BOT_TOKEN']);
+
+bot.on('ready', async () => {
+    console.log('client is login')
+    await getdata();
+});
+
 const app = express();
 
 app.set('trust proxy', 1)
@@ -30,13 +37,6 @@ app.use(session({
 
 require('./modules/router')(app);
 
-bot.login(process.env['BOT_TOKEN']);
-
-bot.on('ready', async () => {
-    console.log('client is login')
-    await getdata();
-});
-
-app.listen(80, () => {
+app.listen(process.env.PORT, () => {
     console.log('web is online now');
 });
