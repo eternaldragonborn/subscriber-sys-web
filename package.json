@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "EternalDragonborn",
   "license": "MIT",
+  "engines": {
+    "node": "16.x"
+  },
   "devDependencies": {
     "nodemon": "^2.0.15"
   },

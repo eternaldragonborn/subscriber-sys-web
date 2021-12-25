@@ -59,12 +59,15 @@ const getdata = async () => {
         data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
     });
 
-    fs.writeFileSync('./subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });
+    // fs.writeFileSync('./subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });
+    await client.set('data', JSON.stringify(data));
 }
 
 const loaddata = async () => {
-    if (!fs.existsSync('./subscribe.dat')) await getdata();
-    return JSON.parse(fs.readFileSync('./subscribe.dat', { encoding: 'utf-8' }));
+    if (!await client.exists('data')) await getdata();
+    return JSON.parse(await client.get('data'));
+    // if (!fs.existsSync('./subscribe.dat')) await getdata();
+    // return JSON.parse(fs.readFileSync('./subscribe.dat', { encoding: 'utf-8' }));
 }
 
 module.exports = {

@@ -16,7 +16,7 @@
     - [ ] check if set up target has subscriber role
 * artist
     - [x] add
-- [ ] webhook
+- [x] webhook
 
 # considering implement
 - log page

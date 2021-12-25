@@ -37,6 +37,6 @@ app.use(session({
 
 require('./modules/router')(app);
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env['PORT'], () => {
     console.log('web is online now');
 });
