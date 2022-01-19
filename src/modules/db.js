@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-const fs = require('fs');
 const { DateTime } = require('luxon');
 const { getUser } = require('./discordbot');
 const pool = new Pool({
@@ -7,9 +6,11 @@ const pool = new Pool({
     user: process.env['SQL_USER'],
     password: process.env['SQL_PASSWD'],
     database: process.env['SQL_DB'],
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: process.env.DEBUG_MODE ?
+        false :
+        {
+            rejectUnauthorized: false
+        }
 });
 
 const redis = require('redis');
@@ -43,12 +44,13 @@ const getdata = async () => {
 
     data['subscribers'] = new Object();
     for (subscriber of (await pool.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
-        const name = (await getUser(subscriber.id.slice(2, -1))).username;
-        data.subscribers[subscriber.id] = new Object({
+        const user = await getUser(subscriber.id);
+        const name = user?.displayName ?? user?.username ?? 'unknown';
+        data.subscribers[subscriber.id] = {
             name,
             preview_url: subscriber.preview_url,
             download_url: subscriber.download_url
-        });
+        };
     };
 
 
@@ -59,15 +61,12 @@ const getdata = async () => {
         data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
     });
 
-    // fs.writeFileSync('./subscribe.dat', JSON.stringify(data), { flag: 'w', encoding: 'utf-8' });
     await client.set('data', JSON.stringify(data));
 }
 
 const loaddata = async () => {
     if (!await client.exists('data')) await getdata();
     return JSON.parse(await client.get('data'));
-    // if (!fs.existsSync('./subscribe.dat')) await getdata();
-    // return JSON.parse(fs.readFileSync('./subscribe.dat', { encoding: 'utf-8' }));
 }
 
 module.exports = {

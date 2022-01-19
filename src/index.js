@@ -2,15 +2,11 @@ const express = require('express');
 const session = require('express-session');
 // const RedisStore = require('connect-redis')(session);
 const engine = require('ejs-locals');
-const { getdata, redis } = require('./modules/db');
 const { bot } = require('./modules/discordbot');
 const bodyParser = require('body-parser');
 
-bot.login(process.env['BOT_TOKEN']);
-
 bot.on('ready', async () => {
-    console.log('client is login')
-    await getdata();
+    console.log('client is login');
 });
 
 const app = express();
@@ -20,17 +16,17 @@ app.engine('ejs', engine);
 app.set('views', './src/views');
 app.set('view engine', 'ejs');
 
+if (process.env.DEBUG_MODE) app.use(require('morgan')('dev'));
 app.use(express.static('./src/public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(require('multer')().array());
-app.use(require('morgan')('dev'));
 app.use(session({
     //store: new RedisStore({ client: redis }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    rolling: true,  // 5分鐘內無任何動作session將過期
-    cookie: {
+    rolling: true,
+    cookie: { // 5分鐘內無任何動作session將過期
         //maxAge: 5 * 60 * 1000
     }
 }));

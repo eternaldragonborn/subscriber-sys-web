@@ -1,7 +1,7 @@
 const { loaddata, redis, pg, getdata } = require('./db');
 const { MessageEmbed } = require('discord.js');
 const { Express, Router } = require('express');
-const { notify } = require('./discordbot');
+const { notify, getUser } = require('./discordbot');
 const { getTime } = require('./env');
 
 const public = Router();
@@ -23,15 +23,14 @@ const dbError = (res, err) => {
 public.get('/validation', async (req, res) => {
     const token = req.query['token'];
 
-    if (token) {
-        if (await redis.exists(token)) {
-            const data = JSON.parse(await redis.get(token));
-            req.session.user = {
-                id: data.id,    // DC id
-                status: data.status // 0: 非訂閱者, 1: 訂閱者, 2: 管理員
-            }
+    if (await redis.exists(token)) {
+        const data = JSON.parse(await redis.get(token));
+        req.session.user = {
+            id: data.id,    // DC id
+            status: data.status // 0: 非訂閱者, 1: 訂閱者, 2: 管理員
         }
         res.redirect('/');
+        if (!process.env.DEBUG_MODE) await redis.del(token);
     } else {
         res.status(401).send("無效的連結，請用指令取得新連結");
     }
@@ -39,6 +38,11 @@ public.get('/validation', async (req, res) => {
 
 public.get('/', async (req, res) => {
     res.render('overview', { user: req.session.user?.id, status: req.session.user?.status ?? 0, data });
+});
+
+public.get('/test', (req, res) => {
+    if (data) res.sendStatus(200);
+    else res.sendStatus(500);
 });
 //#endregion
 
@@ -75,7 +79,7 @@ private.get('/:id', async (req, res) => {
     const info = new Object();
     info.subscribers = data.subscribers[`<@${req.params.id}>`];
     info.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
-    res.render('subscriber', { id: req.params.id, data: info });
+    res.render('subscriber', { id: req.params.id, status: req.session.user.status, data: info });
 });
 //#endregion
 
@@ -95,7 +99,7 @@ edit.use((req, res, next) => {  // validation
 edit.route('/url')
     .put(async (req, res, next) => {  // set up
         const form = req.body;
-        if (await getUserName(form.id) === "unknown") {
+        if (await getUser(form.id) === "unknown") {
             res.status(400).send("無效的訂閱者id");
             return;
         }
@@ -151,16 +155,15 @@ edit.route('/artist')
     })
     .notify(async (req, res, next) => { // update
         const form = req.body;
-        // const artists = form.artists;
         const time = getTime();
         let query = 'UPDATE artists SET ';
-        let values;
+        let values = new Array();
         if (form.status === '3') {
             query += 'status = $1 WHERE artist = ANY($2::text[])';
-            values = [form.status];
+            values.push(form.status);
         } else {
             query += '(status, "lastUpdateTime") = ($1, $2) WHERE artist = ANY($3::text[])';
-            values = [form.status, time.toISODate()];
+            values.push(form.status, time.toISO({ includeOffset: false }));
         }
         values.push(form.artists);
 
@@ -201,6 +204,20 @@ edit.route('/artist')
         } finally {
             client.release();
         }
+    })
+    .delete(async (req, res, next) => {
+        const form = req.body;
+        pg.query('DELETE FROM artists WHERE artist=ANY($1::text[])', [form.artists])
+            .then(() => {
+                res.sendStatus(200);
+                const embed = new MessageEmbed()
+                    .setTitle('繪師資料刪除')
+                    .setColor('RED')
+                    .addField('繪師', form.artists.map(v => `\`${v}\``).join('\n'));
+                notify(form.id, { embeds: [embed] });
+                next();
+            })
+            .catch(err => dbError(res, err));
     });
 
 edit.use(async () => {  // reload data
@@ -214,6 +231,7 @@ edit.use(async () => {  // reload data
  * @param {Express} app
  */
 module.exports = async app => {
+    await getdata();
     data = await loaddata();
     app.use('/', public);
     app.use('/subscriber', private);

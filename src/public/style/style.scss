@@ -16,6 +16,10 @@ a {
     color:rgb(30, 120, 255);
 }
 
+.artist-name {
+    background-color: gainsboro;
+}
+
 .alert {
     --bs-bg-opacity: .7 !important;
     box-shadow: 4px 4px 5px rgba($color: black, $alpha: .4) !important;

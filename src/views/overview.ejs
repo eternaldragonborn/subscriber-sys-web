@@ -54,9 +54,8 @@
 				</div>
 				<div>
 					<ul>
-						<li>訂閱者名皆為Discord實際名稱，而非群組暱稱。</li>
 						<% if(status != 0) { %>
-						<li>超過五分鐘沒任何動作網頁驗證將失效，請重新取得網址。</li>
+						<!-- <li>超過五分鐘沒任何動作網頁驗證將失效，請重新取得網址。</li> -->
 						<% } else { %>
 						<li>非訂閱者無法查看網址。</li>
 						<% } %>
@@ -101,6 +100,7 @@ $('#modal-URL').on('show.bs.modal', event => {
 	const subscriber = button.attr('data-bs-subscriber');
 	const url_type = button.attr('data-bs-type');
 	let url = urls[subscriber][url_type === '預覽' ? 'preview_url' : 'download_url'];
+	url = url.replace(/`([^`]*)`/g, '<span class="artist-name">$1</span>')
 	url = url.replace(/((https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\-\?=#]*)*\/?)/g, '<a href="$1" target="_blank">$1</a>');
 	url = url.replace(/\n/g, '<br>');
 

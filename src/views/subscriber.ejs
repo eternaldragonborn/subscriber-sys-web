@@ -77,8 +77,8 @@ let setup_status = false;
 const modal = $('#editInfo');
 
 function set_up() {
-	const formData = new FormData(form);
-	formSubmit.put('/edit/url', formData)
+	const form = document.forms['edit-url'];
+	formSubmit(form, 'PUT')
 		.then(res => {
 			const alert = $('.alert-success', form);
 			alert.fadeIn('slow', () => {
@@ -94,8 +94,9 @@ function set_up() {
 		.catch(err => {
 			const alert = $('.alert-danger', form);
 			$('span', alert).text(err.response?.data ?? err.message);
-			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 3000));
-		});
+			alert.fadeIn('slow', () => setTimeout(() => alert.fadeOut('slow'), 10000));
+		})
+		.then(() => formReopen(form));
 }
 
 window.onload = () => {
@@ -145,7 +146,7 @@ function resetEvent() {
 }
 
 function loadTable() {
-	$('#subscription-table tbody').html('<tr><td colspan="5"><div class="spinner-border text-primary" role="status">載入資料中...</div></td></tr>');
+	$('#subscription-table tbody').html('<tr><td colspan="5"><div class="spinner-border text-primary" role="status"></div>載入資料中...</td></tr>');
 	axios
 		.get('./get/artist', {
 			params: {
