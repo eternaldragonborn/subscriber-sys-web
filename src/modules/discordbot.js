@@ -28,7 +28,7 @@ const getUser = async (id) => {
 module.exports = {
     bot,
     getUser,
-    notify: async (id, options) => {
+    notify: async (id, ...options) => {
         if (id.startsWith('<@')) id = id.match(/\d{17,18}/)[0];
         for (let hook of hooks) {
             let user;
@@ -38,7 +38,9 @@ module.exports = {
                 console.log(err.message);
             }
             await hook.edit({ name: (user.displayName ?? user.username ?? 'unknown') + '(訂閱通知)', avatar: user.displayAvatarURL() });
-            await hook.send(options);
+            for (let option of options) {
+                await hook.send(option);
+            }
         }
     }
 }

@@ -137,6 +137,14 @@ function editArtistInfo() {
 						<label for="update-mark">備註：</label>
 						<input class="form-control" id="update-mark" name="mark" type="text" placeholder="更新備註/退訂說明，非必填">
 					</div>
+					<div class="form-group mb-3">
+						<label for="download-url">檔案連結：</label>
+						<input class="form-control" id="download-url" name="download-url" type="text" placeholder="檔案直接下載連結，非必要">
+					</div>
+					<div class="form-group mb-3">
+						<label for="update-attach">預覽/附件(非必要，建議只上傳一張)</label>
+						<input type="file" accept="image/png, image/jpeg" class="form-control" name="attach[]" multiple>
+					</div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -164,7 +172,6 @@ function update() {
 		if (!res) return;
 		else method = 'DELETE';
 	}
-
 	formSubmit(form, method)
 		.then(res => {
 			alert('更改成功');

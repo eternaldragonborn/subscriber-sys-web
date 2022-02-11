@@ -1,5 +1,5 @@
 const { loaddata, redis, pg, getdata } = require('./db');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageAttachment } = require('discord.js');
 const { Express, Router } = require('express');
 const { notify, getUser } = require('./discordbot');
 const { getTime } = require('./env');
@@ -16,7 +16,6 @@ const dbError = (res, err) => {
     res.status(500).send('ERROR: ' + message);
 }
 
-// http://localhost:8000/validation?token=token
 // http://localhost:8000/validation?token=test
 
 //#region public Router
@@ -156,6 +155,7 @@ edit.route('/artist')
     .notify(async (req, res, next) => { // update
         const form = req.body;
         const time = getTime();
+
         let query = 'UPDATE artists SET ';
         let values = new Array();
         if (form.status === '3') {
@@ -175,10 +175,12 @@ edit.route('/artist')
             await client.query('COMMIT');
             res.sendStatus(200);
             const subscriber = data.artists.find(v => { return form.artists.includes(v.artist); }).subscriber;
+
             const embed = new MessageEmbed()
                 .addField('繪師', form.artists.map(v => `\`${v}\``).join('\n'), true)
                 .setTimestamp(time.toJSDate());
             if (form.mark) embed.addField('備註/原因', form.mark, true);
+            if (form['download-url']) embed.addField('檔案連結', form['download-url'], false);
             switch (form.status) {
                 case '0': // 更新
                     embed.setTitle('繪師更新')
@@ -196,7 +198,13 @@ edit.route('/artist')
                         .setColor('DARK_RED');
                     break;
             }
-            notify(subscriber, { embeds: [embed] });
+            let attachments;
+            if (req.files) {
+                attachments = req.files.map((file) => new MessageAttachment(file.buffer, file.originalname))
+                embed.setImage(`attachment://${attachments[0].name}`);
+            }
+
+            notify(subscriber, { embeds: [embed], files: [attachments.shift()] }, { files: attachments });
             next();
         } catch (err) {
             await client.query('ROLLBACK');
