@@ -1,5 +1,5 @@
-const { Client } = require('discord.js');
-const { webhooks, guilds } = require('./env');
+const { Client, User, GuildMember } = require('discord.js');
+const { webhooks, book_webhooks, guilds } = require('./env');
 
 const bot = new Client({ intents: [32767] });
 bot.login(process.env['BOT_TOKEN']);
@@ -11,6 +11,11 @@ for (let hook of webhooks) {
         .catch(err => console.log(`fetch webhook ${hook} failed, ${err.message}`));
 };
 
+/**
+ *
+ * @param {string} id - user ID
+ * @returns {Promise<GuildMember | User | undefined>}
+ */
 const getUser = async (id) => {
     if (id.startsWith('<@')) id = id.match(/\d{17,18}/)[0];
     try {
@@ -29,7 +34,6 @@ module.exports = {
     bot,
     getUser,
     notify: async (id, ...options) => {
-        if (id.startsWith('<@')) id = id.match(/\d{17,18}/)[0];
         for (let hook of hooks) {
             let user;
             try {
@@ -41,6 +45,23 @@ module.exports = {
             for (let option of options) {
                 await hook.send(option);
             }
+        }
+    },
+    /**
+     *
+     * @param {string} id
+     * @param {"subscriber" | "free"} type
+     * @param {import('discord.js').MessageOptions} options
+     */
+    sendWebhook: async (id, type, options) => {
+        const user = await getUser(id);
+        try {
+            const hook = await bot.fetchWebhook(book_webhooks[type])
+            await hook.edit({name: (user.displayName ?? user.username ?? 'unknown') + '(本本上傳)', avatar: user.displayAvatarURL() });
+            const msg = await hook.send(options);
+            await msg.react()
+        } catch(err) {
+            console.log(err.message);
         }
     }
 }

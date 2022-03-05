@@ -1,0 +1,106 @@
+<div class="modal fade" id="book-upload-modal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">本本上傳</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form name="book-upload" onsubmit="bookUpload();" action="/subscriber/book">
+				<div class="modal-body">
+					<input type="text" name="id" value="<%- id %>" readonly hidden required>
+					<div class="form-group mb-3">
+						<label for="book-channel">上傳之頻道：</label>
+						<select name="channel" class="form-select mb-3" id="book-channel" required>
+							<option value="subscriber" selected>訂閱者專區</option>
+							<option value="free">免費資源區</option>
+						</select>
+					</div>
+					<div class="row mb-3">
+						<div class="form-group col-auto">
+							<label for="book-title">標題：</label>
+							<input type="text" class="form-control" name="title" id="book-title" required>
+						</div>
+						<div class="form-group col-auto">
+							<label for="book-author">作者：</label>
+							<input id="book-author" class="form-control" name="author" type="text" required>
+						</div>
+					</div>
+					<div class="form-group mb-3">
+						<label for="book-url">下載網址：</label>
+						<input type="text" class="form-control" id="book-url" name="url" required>
+					</div>
+					<div class="form-group mb-3">
+						<label for="book-preview">預覽圖</label>
+						<input type="file" class="form-control" id="book-preview" name="preview_image" required>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+						確定
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script>
+function bookUpload() {
+	const form = document.forms['book-upload'];
+
+
+}
+</script>
+
+<div class="modal fade" id="pack-upload-modal" tabindex="-1">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">圖包上傳</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form name="pack-upload" onsubmit="packUpload();" action="/subscriber/pack">
+				<div class="modal-body">
+					<input type="text" name="id" value="<%- id %>" readonly hidden required>
+					<div class="form-group col-auto">
+						<label for="pack-author">作者：</label>
+						<input id="pack-author" class="form-control" name="author" type="text" required>
+					</div>
+					<div class="form-group mb-3">
+						<label for="pack-url">直接下載網址(非必要)：</label>
+						<input type="text" class="form-control" id="pack-url" name="url">
+					</div>
+					<div class="form-group mb-3">
+						<label for="pack-preview">預覽圖(非必要，限單張)</label>
+						<input type="file" class="form-control" id="pack-preview" name="preview_image">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="submit" class="btn btn-primary">
+						<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+						確定
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script>
+function packUpload() {
+	const form = document.forms['pack-upload'];
+
+	formSubmit(form, 'POST')
+		.then(res => {
+			form.reset();
+			alert('上傳成功');
+		})
+		.catch(res => {
+			alert('上傳失敗，原因：' + res.body);
+		})
+		.then(() => {
+			formReopen(form);
+		});
+}
+</script>

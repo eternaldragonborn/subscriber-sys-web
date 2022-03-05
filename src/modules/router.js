@@ -1,7 +1,7 @@
 const { loaddata, redis, pg, getdata } = require('./db');
 const { MessageEmbed, MessageAttachment } = require('discord.js');
 const { Express, Router } = require('express');
-const { notify, getUser } = require('./discordbot');
+const { notify, getUser, sendWebhook } = require('./discordbot');
 const { getTime } = require('./env');
 
 const public = Router();
@@ -16,7 +16,7 @@ const dbError = (res, err) => {
     res.status(500).send('ERROR: ' + message);
 }
 
-// http://localhost:8000/validation?token=test
+// http://localhost:9090/validation?token=test
 
 //#region public Router
 public.get('/validation', async (req, res) => {
@@ -80,6 +80,46 @@ private.get('/:id', async (req, res) => {
     info.artists = data.artists.filter(artist => { return artist.subscriber === `<@${req.params.id}>`; });
     res.render('subscriber', { id: req.params.id, status: req.session.user.status, data: info });
 });
+
+private.post('/book', async (req, res) => {
+    /**
+     * @type {{id: string; author: string; channel: 'subscriber' | 'free'; title: string; url: string;}}
+     */
+    const form = req.body;
+    const image = new MessageAttachment(req.files[0].buffer, req.files[0].originalname);
+    const embed = new MessageEmbed()
+        .setTitle(form.title)
+        .setColor('GOLD')
+        .addField('作者', form.author)
+        .setImage('attachment://' + image.name);
+
+    try {
+        await sendWebhook(form.id, form.channel, {embeds: [embed], files: [image]});
+        res.sendStatus(200);
+    } catch(err) {
+        res.status(500).send(err.message);
+    }
+});
+
+private.post('/pack', async (req, res) => {
+    /**
+     * @type {{id: string; author: string; url: string;}}
+     */
+    const form = req.body;
+    const image = new MessageAttachment(req.files[0].buffer, req.files[0].originalname);
+    const embed = new MessageEmbed()
+        .setTitle('圖包上傳')
+        .setColor('GOLD')
+        .addField('作者', form.author)
+        .setImage('attachment://' + image.name);
+
+    try {
+        await sendWebhook(form.id, form.channel, {embeds: [embed], files: [image]});
+        res.sendStatus(200);
+    } catch(err) {
+        res.status(500).send(err.message);
+    }
+})
 //#endregion
 
 //#region edit Router

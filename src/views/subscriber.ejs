@@ -12,6 +12,7 @@
 
 <body>
 	<% include /modals/artist_modals %>
+	<% include /modals/book_upload %>
 	<!-- navbar -->
 	<div class="fliud-container">
 		<header class="d-flex justify-content-center py-3">
@@ -31,6 +32,12 @@
 			</button>
 			<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editInfo">
 				修改資料
+			</button>
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pack-upload-modal">
+				圖包上傳
+			</button>
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#book-upload-modal" disabled>
+				本本上傳(修改中)
 			</button>
 		</div>
 		<!-- end of toolbar -->
