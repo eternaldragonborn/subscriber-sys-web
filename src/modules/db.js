@@ -1,7 +1,10 @@
-const { Pool } = require('pg');
-const { DateTime } = require('luxon');
-const { getUser } = require('./discordbot');
-const pool = new Pool({
+import Pg from 'pg';
+import { DateTime } from 'luxon';
+import { getUser, bot } from './discordbot.js';
+import { webhooks, UpdateStatus, hookSetting } from './env.js';
+import { createClient } from 'redis';
+
+export const pg = new Pg.Pool({
     host: process.env['SQL_HOST'],
     user: process.env['SQL_USER'],
     password: process.env['SQL_PASSWD'],
@@ -12,33 +15,36 @@ const pool = new Pool({
             rejectUnauthorized: false
         }
 });
+export const redis = createClient({ url: 'redis://' + process.env['REDIS_HOST'], password: process.env['REDIS_PASSWD'] });
+redis.connect();
 
-const redis = require('redis');
-const client = redis.createClient({ url: 'redis://' + process.env['REDIS_HOST'], password: process.env['REDIS_PASSWD'] });
-client.connect();
+export const getTime = () => DateTime.now().setZone('Asia/Taipei');
 
-function updateStatus(date, status) {
+export const updateStatus = (date, status) => {
     const timeDiff = -(date.diffNow('days').days);
     date = date.toISODate();
-    if (timeDiff >= 30) {
+    if (timeDiff >= 30 && status !== UpdateStatus.unSubscribed) {
         status = "未更新";
-    } else if (status === 1) {
+    } else if (status === UpdateStatus.newSubscribe) {
         status = "新訂閱";
-    } else if (status === 3) {
+    } else if (status === UpdateStatus.unSubscribed) {
         status = "已退訂";
-    } else if (status === 0) {
+    } else if (status === UpdateStatus.normal) {
         status = "已更新";
-    } else if (status === 2) {
+    } else if (status === UpdateStatus.noUpdate) {
         status = "本月無更新";
     }
     return new Object({ updateDate: date, status: status });
-}
+};
 
-const getdata = async () => {
+/**
+ * 將database中資料存至Collect中
+ */
+export const getdata = async () => {
     const data = new Object();
 
     data['subscribers'] = new Object();
-    for (subscriber of (await pool.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
+    for (let subscriber of (await pg.query('SELECT subscriber as id, preview_url, download_url FROM subscribers')).rows) {
         const user = await getUser(subscriber.id);
         const name = user?.displayName ?? user?.username ?? 'unknown';
         data.subscribers[subscriber.id] = {
@@ -49,24 +55,69 @@ const getdata = async () => {
     };
 
 
-    data['artists'] = (await pool.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
+    data['artists'] = (await pg.query('SELECT * FROM artists ORDER BY "lastUpdateTime" DESC')).rows;
     data['artists'].forEach((artist, index) => {
         let { status, lastUpdateTime, ...info } = artist;
         lastUpdateTime = DateTime.fromJSDate(lastUpdateTime);
         data.artists[index] = { ...info, ...(updateStatus(lastUpdateTime, status)) };
     });
 
-    await client.set('data', JSON.stringify(data));
-}
+    await redis.set('data', JSON.stringify(data));
+};
 
-const loaddata = async () => {
-    if (!await client.exists('data')) await getdata();
-    return JSON.parse(await client.get('data'));
-}
+/**
+ * @returns {Promise<import('./types').SubscribeData>}
+ * 回傳Collect中的資料
+ */
+export const loaddata = async () => {
+    if (!await redis.exists('data')) await getdata();
+    return JSON.parse(await redis.get('data'));
+};
 
-module.exports = {
-    pg: pool,
-    redis: client,
-    getdata,
-    loaddata
-}
+export const checkUpdate = async() => {
+    const targetDate = getTime().minus({day: 30}).toISODate();
+    /**
+     * @type {import('./types').ArtistData[]}
+     */
+    let data = (await pg.query(`SELECT * FROM artists WHERE "lastUpdateTime" < '${targetDate}' AND status != ${UpdateStatus.unSubscribed}`)).rows;
+    const filteredData = data.map(artist => {
+        let time = DateTime.fromJSDate(artist.lastUpdateTime).toFormat('LL/dd');
+        if(artist.status === UpdateStatus.newSubscribe) time = `新增後未更新，${time}`;
+        return {artist: artist.artist, subscriber: artist.subscriber, lastUpdateTime: time};
+    });
+
+    /**
+     * @type {{[subscriber: string]: string}}
+     */
+    const sortedData = {};
+    filteredData.forEach(data => {
+        const { subscriber, ...info } = data;
+        if(!Object.keys(sortedData).includes(subscriber)) {
+            sortedData[subscriber] = `\`${info.artist}\`(${info.lastUpdateTime})`;
+        } else {
+            sortedData[subscriber] += `、\`${info.artist}\`(${info.lastUpdateTime})`;
+        }
+    });
+
+    let content = "30天未更新：\n>>> ";
+    if(!Object.keys(sortedData).length) content += "無";
+    else {
+        Object.keys(sortedData).forEach(subscriber => {
+            content += `${subscriber}：${sortedData[subscriber]}\n`;
+        });
+    }
+
+    try {
+        const hook = await bot.fetchWebhook(webhooks.subscribe.notification);
+        await hookSetting(hook, '未更新訂閱通知');
+        await hook.send({content});
+    } catch(err) {
+        console.log('發送未更新通知失敗，原因： ' + err.message);
+    }
+};
+
+export const dbError = (res, err) => {
+    const message = err.detail ?? err.message;
+    console.error(message);
+    res.status(500).send('ERROR: ' + message);
+};

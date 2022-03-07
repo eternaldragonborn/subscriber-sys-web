@@ -1,9 +1,12 @@
-const express = require('express');
-const session = require('express-session');
+import express from 'express';
+import session from 'express-session';
 // const RedisStore = require('connect-redis')(session);
-const engine = require('ejs-locals');
-const { bot } = require('./modules/discordbot');
-const bodyParser = require('body-parser');
+import engine from 'ejs-locals';
+import { bot } from './modules/discordbot.js';
+import parser from 'body-parser';
+import morgan from 'morgan';
+import multer from 'multer';
+const { urlencoded } = parser;
 
 bot.on('ready', async () => {
     console.log('client is login');
@@ -16,10 +19,10 @@ app.engine('ejs', engine);
 app.set('views', './src/views');
 app.set('view engine', 'ejs');
 
-if (process.env.DEBUG_MODE) app.use(require('morgan')('dev'));
+if (process.env.DEBUG_MODE) app.use(morgan('dev'));
 app.use(express.static('./src/public'));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(require('multer')().any());
+app.use(urlencoded({ extended: false }));
+app.use(multer().any());
 app.use(session({
     //store: new RedisStore({ client: redis }),
     secret: process.env.SESSION_SECRET,
@@ -31,8 +34,9 @@ app.use(session({
     }
 }));
 
-require('./modules/router')(app);
+import mountRouter from './modules/router.js';
 
-app.listen(process.env['PORT'], () => {
+app.listen(process.env['PORT'], async () => {
+    await mountRouter(app);
     console.log('web is online now');
 });

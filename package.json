@@ -5,7 +5,7 @@
   "author": "EternalDragonborn",
   "license": "MIT",
   "engines": {
-    "node": "16.x"
+    "node": "17.x"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
@@ -24,6 +24,7 @@
     "pg": "^8.7.1",
     "redis": "^4.0.0"
   },
+  "type": "module",
   "scripts": {
     "watch": "nodemon -L src/index.js",
     "run": "node src/index.js"

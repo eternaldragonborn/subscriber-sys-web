@@ -1,22 +1,26 @@
-const { Client, User, GuildMember } = require('discord.js');
-const { webhooks, book_webhooks, guilds } = require('./env');
+import { Client, User, GuildMember, Webhook } from 'discord.js';
+import { webhooks, guilds, hookSetting, emojis } from './env.js';
 
-const bot = new Client({ intents: [32767] });
-bot.login(process.env['BOT_TOKEN']);
+export const bot = new Client({ intents: [32767] });
 
-const hooks = new Array();
-for (let hook of webhooks) {
-    bot.fetchWebhook(hook)
-        .then(webhook => { hooks.push(webhook); })
-        .catch(err => console.log(`fetch webhook ${hook} failed, ${err.message}`));
-};
+/**
+ * @type { Webhook[] }
+ */
+const notifyHooks = new Array();
+bot.on('ready', () => {
+    for (let hook of Object.values(webhooks.subscribe)) {
+        bot.fetchWebhook(hook)
+            .then(webhook => { notifyHooks.push(webhook); })
+            .catch(err => console.log(`fetch webhook ${hook} failed, ${err.message}`));
+    };
+});
 
 /**
  *
  * @param {string} id - user ID
  * @returns {Promise<GuildMember | User | undefined>}
  */
-const getUser = async (id) => {
+export const getUser = async (id) => {
     if (id.startsWith('<@')) id = id.match(/\d{17,18}/)[0];
     try {
         const guild = await bot.guilds.fetch(guilds.furry);
@@ -30,38 +34,43 @@ const getUser = async (id) => {
     }
 }
 
-module.exports = {
-    bot,
-    getUser,
-    notify: async (id, ...options) => {
-        for (let hook of hooks) {
-            let user;
-            try {
-                user = await getUser(id);;
-            } catch (err) {
-                console.log(err.message);
-            }
-            await hook.edit({ name: (user.displayName ?? user.username ?? 'unknown') + '(訂閱通知)', avatar: user.displayAvatarURL() });
+/**
+ * @param {string} id
+ * @param  {import('discord.js').MessageOptions | import('discord.js').MessageOptions[]} options
+ */
+export const notify = async (id, options) => {
+    for (let hook of notifyHooks) {
+        let user;
+        try {
+            user = await getUser(id);
+        } catch (err) {
+            console.log(err.message);
+        }
+        await hookSetting(hook, '訂閱通知', user);
+        if(Array.isArray(options)) {
             for (let option of options) {
                 await hook.send(option);
             }
-        }
-    },
-    /**
-     *
-     * @param {string} id
-     * @param {"subscriber" | "free"} type
-     * @param {import('discord.js').MessageOptions} options
-     */
-    sendWebhook: async (id, type, options) => {
-        const user = await getUser(id);
-        try {
-            const hook = await bot.fetchWebhook(book_webhooks[type])
-            await hook.edit({name: (user.displayName ?? user.username ?? 'unknown') + '(本本上傳)', avatar: user.displayAvatarURL() });
-            const msg = await hook.send(options);
-            await msg.react()
-        } catch(err) {
-            console.log(err.message);
-        }
+        } else await hook.send(options);
+    }
+}
+
+/**
+ *
+ * @param {string} id
+ * @param {"subscriber" | "free"} type
+ * @param {MessageOptions} options
+ */
+export const sendWebhook = async (id, type, options) => {
+    const user = await getUser(id);
+    try {
+        const hook = await bot.fetchWebhook(webhooks.book[type]);
+        await hookSetting(hook, '本本上傳', user);
+        const msg = await hook.send(options);
+        await msg.react(emojis.book);
+
+        // TODO: 建檔
+    } catch(err) {
+        console.log(err.message);
     }
 }
