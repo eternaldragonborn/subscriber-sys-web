@@ -8,6 +8,13 @@ header {
   position: sticky;
 }
 
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+  * {
+    font-size: small;
+  }
+}
+
 html body {
   height: 100vh;
 }

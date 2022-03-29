@@ -13,7 +13,7 @@ router.get('/validation', async (req, res) => {
             status: data.status // 0: 非訂閱者, 1: 訂閱者, 2: 管理員
         }
         res.redirect('/');
-        if (!process.env.DEBUG_MODE) await redis.del(token);
+        // if (!process.env.DEBUG_MODE) await redis.del(token);
     } else {
         res.status(401).send("無效的連結，請用指令取得新連結");
     }

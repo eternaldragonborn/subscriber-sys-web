@@ -55,9 +55,6 @@ function add_artist() {
 </script>
 <!-- end of add artist -->
 
-<!-- modal remove artist -->
-<!-- end of modal -->
-
 <!-- modal edit artist info -->
 <div class="modal fade" id="editArtist" role="dialog" tabindex="-1" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered">
@@ -168,7 +165,7 @@ function update() {
 		alert('請選擇動作。');
 		return;
 	} else if ($('option:selected', form).attr('value') === '-1') {
-		let res = confirm('除非雲端已將該繪師圖包移除，否則不建議刪除繪師資料。');
+		let res = confirm('!!!該動作無法復原!!!\n除非雲端已將該繪師圖包移除，否則不建議刪除繪師資料。');
 		if (!res) return;
 		else method = 'DELETE';
 	}

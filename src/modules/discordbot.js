@@ -1,4 +1,5 @@
 import { Client, User, GuildMember, Webhook } from 'discord.js';
+import { mongoDB } from './db.js';
 import { webhooks, guilds, hookSetting, emojis } from './env.js';
 
 export const bot = new Client({ intents: [32767] });
@@ -69,7 +70,7 @@ export const sendWebhook = async (id, type, options) => {
         const msg = await hook.send(options);
         await msg.react(emojis.book);
 
-        // TODO: 建檔
+        return msg;
     } catch(err) {
         console.log(err.message);
     }

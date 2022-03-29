@@ -106,7 +106,7 @@ router.route('/artist')
             const embed = new MessageEmbed()
                 .addField('繪師', form.artists.map(v => `\`${v}\``).join('\n'), true)
                 .setTimestamp(time.toJSDate());
-            if (form.mark) embed.addField('備註/原因', form.mark, true);
+            if (form.mark) embed.addField('備註', form.mark, true);
             if (form['download-url']) embed.addField('檔案連結', form['download-url'], false);
             switch (form.status) {
                 case '0': // 更新

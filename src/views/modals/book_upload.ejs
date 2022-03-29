@@ -49,7 +49,18 @@
 function bookUpload() {
 	const form = document.forms['book-upload'];
 
-
+	formSubmit(form, 'POST')
+		.then(res => {
+			form.reset();
+			alert('上傳成功');
+		})
+		.catch(res => {
+			console.log(res)
+			alert('上傳失敗，原因：' + res.body);
+		})
+		.then(() => {
+			formReopen(form);
+		});
 }
 </script>
 

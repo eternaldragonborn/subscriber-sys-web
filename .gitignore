@@ -2,3 +2,5 @@
 subscribe.dat
 *docker*
 node_modules/
+*.map
+*.scss

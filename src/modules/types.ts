@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 
 interface SubscriberData {
     subscriber: string;
-    priview_url: string;
+    preview_url: string;
     download_url: string;
     addTime: DateTime;
 }

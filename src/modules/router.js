@@ -18,7 +18,7 @@ export default async function (app) {
     // TODO: 排程
     if(await redis.exists('UpdateCheck')) {
         const time = DateTime.fromISO(await redis.get('UpdateCheck'));
-        if(time.diffNow('days').days > 3) {
+        if(time.diffNow('days').days < -5) {
             await checkUpdate();
             await redis.set('UpdateCheck', DateTime.now().toISODate());
         }
